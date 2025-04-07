@@ -92,6 +92,46 @@
     filter: url('#tritanopia-filter');
   }
   
+  /* Enhanced Color Blindness Support */
+  /* Protanopia - red-blind */ 
+  body.protanopia .threat-safe {
+    @apply bg-blue-100 text-blue-800 border-blue-300 !important;
+  }
+  
+  body.protanopia .threat-suspicious {
+    @apply bg-amber-200 text-blue-900 border-blue-500 !important;
+  }
+  
+  body.protanopia .threat-phishing {
+    @apply bg-blue-900 text-white border-white !important;
+  }
+  
+  /* Deuteranopia - green-blind */
+  body.deuteranopia .threat-safe {
+    @apply bg-blue-100 text-blue-800 border-blue-300 !important;
+  }
+  
+  body.deuteranopia .threat-suspicious {
+    @apply bg-purple-200 text-purple-900 border-purple-400 !important;
+  }
+  
+  body.deuteranopia .threat-phishing {
+    @apply bg-blue-900 text-white border-white !important;
+  }
+  
+  /* Tritanopia - blue-blind */
+  body.tritanopia .threat-safe {
+    @apply bg-green-200 text-green-900 border-green-400 !important;
+  }
+  
+  body.tritanopia .threat-suspicious {
+    @apply bg-red-200 text-red-900 border-red-400 !important;
+  }
+  
+  body.tritanopia .threat-phishing {
+    @apply bg-black text-white border-white !important;
+  }
+  
   /* iOS status bar fix for dark mode */
   @supports (-webkit-touch-callout: none) {
     .capacitor-environment {
@@ -195,6 +235,28 @@
   
   .high-contrast .phishing-link {
     @apply bg-red-700 text-white px-1 py-0.5 rounded font-bold border-white border-2;
+  }
+  
+  /* High Contrast Enhanced Text Content Formatting */
+  .high-contrast .phishing-url-hc {
+    @apply bg-red-600 text-white px-1 py-0.5 mx-0.5 rounded font-bold border-white border-2;
+  }
+  
+  .high-contrast .suspicious-term-hc {
+    @apply bg-yellow-500 text-black px-1 mx-0.5 rounded font-bold border-black border-2;
+  }
+  
+  /* Standard Enhanced Text Content Formatting */
+  .phishing-url {
+    @apply bg-red-100 text-red-800 px-1 py-0.5 mx-0.5 rounded-sm border border-red-300;
+  }
+  
+  .suspicious-term {
+    @apply bg-amber-100 text-amber-800 px-1 mx-0.5 rounded-sm border border-amber-300;
+  }
+  
+  .url {
+    @apply text-blue-600 underline;
   }
   
   /* Normal Threat Visualization (for comparison) */
