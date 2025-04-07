@@ -79,10 +79,9 @@ export default function ProtectionStatus() {
           <ProtectionItem 
             icon="chat"
             title="Social Media Protection"
-            description="Not available in free plan"
+            description="Protection for common platforms"
             enabled={settings?.socialMediaProtection}
             onChange={(value) => handleToggleProtection('socialMediaProtection', value)}
-            disabled={true}
             color="fuchsia"
           />
           
