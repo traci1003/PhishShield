@@ -136,3 +136,13 @@ export const deviceTokenSchema = z.object({
 });
 
 export type DeviceTokenRequest = z.infer<typeof deviceTokenSchema>;
+
+// Schema for contact form
+export const contactFormSchema = z.object({
+  name: z.string().min(1, { message: "Name is required" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  subject: z.string().min(1, { message: "Subject is required" }),
+  message: z.string().min(10, { message: "Message must be at least 10 characters" }).max(1000, { message: "Message must be less than 1000 characters" }),
+});
+
+export type ContactFormRequest = z.infer<typeof contactFormSchema>;

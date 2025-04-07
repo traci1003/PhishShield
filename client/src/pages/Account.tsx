@@ -119,10 +119,12 @@ export default function Account() {
                   FAQ
                 </Button>
               </Link>
-              <Button variant="outline" className="w-full justify-start">
-                <span className="material-icons text-sm mr-2">contact_support</span>
-                Contact Support
-              </Button>
+              <Link href="/contact-support">
+                <Button variant="outline" className="w-full justify-start">
+                  <span className="material-icons text-sm mr-2">contact_support</span>
+                  Contact Support
+                </Button>
+              </Link>
               <Link href="/privacy-policy">
                 <Button variant="outline" className="w-full justify-start">
                   <FileText className="h-4 w-4 mr-2" />

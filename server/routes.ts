@@ -5,12 +5,14 @@ import { storage } from "./storage";
 import { aiAssistant } from "./ai-service";
 import { notificationService } from "./notification-service";
 import { stripeService } from "./stripe-service";
+import { emailService } from "./email-service";
 import { 
   scanTextSchema, 
   scanUrlSchema, 
   insertMessageSchema,
   chatMessageSchema,
-  deviceTokenSchema
+  deviceTokenSchema,
+  contactFormSchema
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -297,6 +299,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Checkout session error:", error);
       res.status(500).json({ message: "Error creating checkout session" });
+    }
+  });
+  
+  // Contact support form submission
+  apiRouter.post("/contact-support", async (req: Request, res: Response) => {
+    try {
+      // Validate the request data
+      const data = contactFormSchema.parse(req.body);
+      
+      // Log the support request for record-keeping
+      console.log("Support request received:", {
+        name: data.name,
+        email: data.email,
+        subject: data.subject,
+        message: data.message.substring(0, 50) + (data.message.length > 50 ? '...' : '')
+      });
+      
+      // Try to send email
+      let emailSent = false;
+      
+      if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY.startsWith('SG.')) {
+        emailSent = await emailService.sendSupportEmail(
+          data.name,
+          data.email,
+          data.subject,
+          data.message
+        );
+      } else {
+        console.warn("SendGrid API key is missing or invalid. Emails will not be sent.");
+      }
+      
+      // Always return success to the client, but log if email failed
+      if (!emailSent) {
+        console.log("Email notification failed, but support request was logged successfully");
+      }
+      
+      // Return success response to client
+      res.json({ 
+        success: true, 
+        message: "Support request received successfully",
+        emailSent
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      console.error("Contact support error:", error);
+      res.status(500).json({ message: "Error submitting support request" });
     }
   });
   
