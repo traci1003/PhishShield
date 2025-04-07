@@ -7,11 +7,14 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { highlightSuspiciousParts } from "@/lib/natural-language";
+import { useAccessibility } from "@/contexts/accessibility-context";
+import { Check, AlertCircle, X } from "lucide-react";
+import { Message } from "@shared/schema";
 
 export default function ThreatHistory() {
   const [activeTab, setActiveTab] = useState("all");
   
-  const { data: messages, isLoading } = useQuery({
+  const { data: messages = [], isLoading } = useQuery<Message[]>({
     queryKey: ['/api/messages'],
   });
 
@@ -83,7 +86,7 @@ export default function ThreatHistory() {
     return filteredMessages.map(message => (
       <HistoryItem 
         key={message.id}
-        message={message}
+        message={message as unknown as ExtendedMessage}
         onDelete={() => handleDelete(message.id)}
       />
     ));
@@ -129,97 +132,134 @@ export default function ThreatHistory() {
   );
 }
 
+// Define a more specific type for message in our component
+interface ExtendedMessage {
+  id: number;
+  userId: number | null;
+  content: string;
+  sender: string | null;
+  scanDate: Date;
+  threatLevel: string;
+  threatDetails: {
+    reasons: string[];
+  } | Record<string, never>;
+  isRead: boolean;
+  source: string | null;
+}
+
 interface HistoryItemProps {
-  message: any;
+  message: ExtendedMessage;
   onDelete: () => void;
 }
 
 function HistoryItem({ message, onDelete }: HistoryItemProps) {
   const [expanded, setExpanded] = useState(false);
+  const { highContrast } = useAccessibility();
   
   const threatLevel = message.threatLevel;
   const reasons = message.threatDetails?.reasons || [];
   
-  let borderColor;
-  let icon;
-  
-  switch (threatLevel) {
-    case 'phishing':
-      borderColor = 'border-danger-500';
-      icon = 'warning';
-      break;
-    case 'suspicious':
-      borderColor = 'border-caution-500';
-      icon = 'help_outline';
-      break;
-    default:
-      borderColor = 'border-success-500';
-      icon = 'check_circle';
-  }
-  
   const scanDate = new Date(message.scanDate);
   const formattedDate = format(scanDate, 'MMM d, yyyy h:mm a');
   
+  // Define threat classes based on accessibility settings
+  const getThreatClasses = () => {
+    // Use the threat- classes we defined in CSS
+    const containerClass = `threat-${threatLevel}`;
+    const iconClass = `threat-${threatLevel}-icon`;
+    
+    return {
+      containerClass,
+      iconClass,
+    };
+  };
+  
+  const { containerClass, iconClass } = getThreatClasses();
+  
+  // Get icon based on threat level
+  const ThreatIcon = () => {
+    switch (threatLevel) {
+      case 'phishing':
+        return <X className="h-4 w-4" />;
+      case 'suspicious':
+        return <AlertCircle className="h-4 w-4" />;
+      default:
+        return <Check className="h-4 w-4" />;
+    }
+  };
+  
   return (
-    <div className={`bg-white rounded-xl shadow-sm p-4 mb-4 border-l-4 ${borderColor}`}>
+    <div className={`${highContrast ? 'high-contrast' : ''} rounded-xl shadow-sm p-4 mb-4 ${containerClass}`}>
       <div className="flex items-start">
-        <div className={`rounded-full bg-${threatLevel === 'phishing' ? 'danger' : threatLevel === 'suspicious' ? 'caution' : 'success'}-500 p-1 mr-3`}>
-          <span className="material-icons text-white text-sm">{icon}</span>
+        <div className={`mr-3 ${iconClass}`}>
+          <ThreatIcon />
         </div>
         <div className="flex-grow">
           <div className="flex justify-between items-start">
-            <h3 className="font-medium text-gray-900">
+            <h3 className="font-medium">
               {threatLevel === 'phishing' 
                 ? 'Phishing Detected' 
                 : threatLevel === 'suspicious'
                   ? 'Suspicious Content'
                   : 'Safe Message'}
             </h3>
-            <span className="text-xs text-gray-500">{formattedDate}</span>
+            <span className="text-xs">{formattedDate}</span>
           </div>
-          <p className="text-xs text-gray-600 mt-1">
-            {message.source.charAt(0).toUpperCase() + message.source.slice(1)} from{" "}
-            <span className="font-medium">{message.sender}</span>
+          <p className="text-xs mt-1">
+            {message.sender ? (
+              <>
+                Message from <span className="font-medium">{message.sender}</span>
+              </>
+            ) : (
+              <>URL Scan</>
+            )}
           </p>
           
           {/* Message Preview */}
-          <div className="mt-3 text-sm p-3 bg-gray-50 rounded-lg">
+          <div className={`mt-3 text-sm p-3 rounded-lg ${highContrast ? 'bg-gray-800 text-white' : 'bg-gray-50'}`}>
             {expanded ? (
-              <p 
-                className="text-gray-700" 
+              <div 
                 dangerouslySetInnerHTML={{ 
-                  __html: highlightSuspiciousParts(message.content, reasons) 
+                  __html: highlightSuspiciousParts(message.content, reasons)
                 }}
               />
             ) : (
-              <p className="text-gray-700 line-clamp-2">
+              <p className="line-clamp-2">
                 {message.content}
               </p>
             )}
           </div>
           
+          {/* Threat Indicators for High Contrast Mode */}
+          {reasons.length > 0 && expanded && highContrast && (
+            <div className="mt-2 p-3 border-2 border-dashed border-white bg-black text-white rounded-lg">
+              <h4 className="font-bold text-sm mb-1">Threat Indicators:</h4>
+              <ul className="list-disc pl-5 text-sm space-y-1">
+                {reasons.map((reason: string, index: number) => (
+                  <li key={index}>{reason}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
           {/* Action Buttons */}
           <div className="mt-3 flex justify-between">
             <div>
               <Button 
-                variant="ghost" 
+                variant={highContrast ? "default" : "ghost"} 
                 size="sm" 
-                className="text-xs"
+                className={`text-xs ${highContrast ? 'bg-blue-700 text-white' : ''}`}
                 onClick={() => setExpanded(!expanded)}
               >
-                <span className="material-icons text-sm mr-1">
-                  {expanded ? 'unfold_less' : 'unfold_more'}
-                </span>
                 {expanded ? 'Show Less' : 'Show More'}
               </Button>
             </div>
             <Button 
-              variant="outline" 
+              variant={highContrast ? "destructive" : "outline"} 
               size="sm" 
-              className="text-xs rounded-full"
+              className={`text-xs rounded-full ${highContrast ? 'bg-red-700 text-white' : ''}`}
               onClick={onDelete}
             >
-              <span className="material-icons text-sm mr-1">delete</span>
               Delete
             </Button>
           </div>

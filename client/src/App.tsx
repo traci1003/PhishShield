@@ -14,6 +14,49 @@ import AppLayout from "@/components/layout/app-layout";
 import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { notificationService } from "./lib/notification-service";
+import { AccessibilityProvider } from "@/contexts/accessibility-context";
+import Subscription from "@/pages/Subscription";
+
+// SVG Filters for color blindness simulations
+const ColorBlindnessFilters = () => (
+  <svg
+    className="absolute opacity-0 pointer-events-none w-0 h-0"
+    aria-hidden="true"
+  >
+    {/* Protanopia Filter (Red-Blind) */}
+    <filter id="protanopia-filter">
+      <feColorMatrix
+        type="matrix"
+        values="0.567, 0.433, 0,     0, 0
+                0.558, 0.442, 0,     0, 0
+                0,     0.242, 0.758, 0, 0
+                0,     0,     0,     1, 0"
+      />
+    </filter>
+    
+    {/* Deuteranopia Filter (Green-Blind) */}
+    <filter id="deuteranopia-filter">
+      <feColorMatrix
+        type="matrix"
+        values="0.625, 0.375, 0,   0, 0
+                0.7,   0.3,   0,   0, 0
+                0,     0.3,   0.7, 0, 0
+                0,     0,     0,   1, 0"
+      />
+    </filter>
+    
+    {/* Tritanopia Filter (Blue-Blind) */}
+    <filter id="tritanopia-filter">
+      <feColorMatrix
+        type="matrix"
+        values="0.95, 0.05,  0,     0, 0
+                0,    0.433, 0.567, 0, 0
+                0,    0.475, 0.525, 0, 0
+                0,    0,     0,     1, 0"
+      />
+    </filter>
+  </svg>
+);
 
 function App() {
   const [isCapacitor, setIsCapacitor] = useState(false);
@@ -59,10 +102,13 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className={isCapacitor ? 'capacitor-environment' : ''}>
-        <AppContent isCapacitor={isCapacitor} />
-      </div>
-      <Toaster />
+      <AccessibilityProvider>
+        <div className={isCapacitor ? 'capacitor-environment' : ''}>
+          <ColorBlindnessFilters />
+          <AppContent isCapacitor={isCapacitor} />
+        </div>
+        <Toaster />
+      </AccessibilityProvider>
     </QueryClientProvider>
   );
 }
@@ -81,6 +127,7 @@ function AppContent({ isCapacitor }: { isCapacitor: boolean }) {
           <Route path="/scan" component={Scan} />
           <Route path="/history" component={History} />
           <Route path="/account" component={Account} />
+          <Route path="/subscription" component={Subscription} />
           <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/terms-of-service" component={TermsOfService} />
           <Route path="/faq" component={FAQ} />

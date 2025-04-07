@@ -15,6 +15,82 @@
     user-select: none;
     -webkit-touch-callout: none;
   }
+
+  /* High Contrast Mode */
+  body.high-contrast {
+    @apply bg-black text-white;
+  }
+
+  body.high-contrast * {
+    @apply border-gray-300;
+  }
+
+  body.high-contrast button:not(.btn-accent):not(.btn-destructive):not(.btn-success) {
+    @apply bg-white text-black border-black border-2;
+  }
+
+  body.high-contrast .btn-accent {
+    @apply bg-yellow-400 text-black border-black border-2;
+  }
+
+  body.high-contrast .btn-destructive {
+    @apply bg-red-600 text-white border-white border-2;
+  }
+
+  body.high-contrast .btn-success {
+    @apply bg-green-600 text-white border-white border-2;
+  }
+
+  body.high-contrast .card,
+  body.high-contrast .input,
+  body.high-contrast .select {
+    @apply border-white border-2;
+  }
+
+  /* Large Text Mode */
+  body.large-text {
+    font-size: 120%;
+  }
+  
+  body.large-text h1 {
+    font-size: 2.5rem;
+  }
+  
+  body.large-text h2 {
+    font-size: 2rem;
+  }
+  
+  body.large-text h3 {
+    font-size: 1.75rem;
+  }
+  
+  body.large-text p, 
+  body.large-text li, 
+  body.large-text label, 
+  body.large-text button {
+    font-size: 1.2rem;
+  }
+
+  /* Reduced Motion */
+  body.reduced-motion * {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Color Blindness Modes */
+  body.protanopia {
+    filter: url('#protanopia-filter');
+  }
+  
+  body.deuteranopia {
+    filter: url('#deuteranopia-filter');
+  }
+  
+  body.tritanopia {
+    filter: url('#tritanopia-filter');
+  }
   
   /* iOS status bar fix for dark mode */
   @supports (-webkit-touch-callout: none) {
@@ -54,6 +130,70 @@
   /* Text gradients */
   .text-gradient {
     @apply bg-clip-text text-transparent;
+  }
+  
+  /* High Contrast Threat Visualization */
+  .high-contrast .threat-safe {
+    @apply bg-green-700 text-white border-green-300 border-2;
+  }
+  
+  .high-contrast .threat-suspicious {
+    @apply bg-yellow-500 text-black border-black border-2;
+  }
+  
+  .high-contrast .threat-phishing {
+    @apply bg-red-700 text-white border-white border-dashed border-2;
+  }
+  
+  .high-contrast .threat-safe-icon {
+    @apply text-white bg-green-700 p-1.5 rounded-full;
+  }
+  
+  .high-contrast .threat-suspicious-icon {
+    @apply text-black bg-yellow-500 p-1.5 rounded-full;
+  }
+  
+  .high-contrast .threat-phishing-icon {
+    @apply text-white bg-red-700 p-1.5 rounded-full;
+  }
+  
+  /* High contrast detection highlights */
+  .high-contrast span.bg-warning-100 {
+    @apply bg-yellow-500 text-black border-black border-2 font-bold px-1 rounded;
+  }
+  
+  /* Normal Threat Visualization (for comparison) */
+  .threat-safe {
+    @apply bg-green-100 text-green-800 border-green-200;
+  }
+  
+  .threat-suspicious {
+    @apply bg-amber-100 text-amber-800 border-amber-200;
+  }
+  
+  .threat-phishing {
+    @apply bg-red-100 text-red-800 border-red-200;
+  }
+  
+  .threat-safe-icon {
+    @apply text-green-500;
+  }
+  
+  .threat-suspicious-icon {
+    @apply text-amber-500;
+  }
+  
+  .threat-phishing-icon {
+    @apply text-red-500;
+  }
+  
+  /* Accessibility focus indicators */
+  .high-contrast :focus {
+    @apply outline-yellow-400 outline-4 outline-offset-2 outline;
+  }
+  
+  .high-contrast :focus-visible {
+    @apply outline-yellow-400 outline-4 outline-offset-2 outline;
   }
   
   /* Animation classes */

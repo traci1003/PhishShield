@@ -40,7 +40,7 @@ export async function analyzeText(
 /**
  * Helper function to highlight suspicious parts of a message
  */
-export function highlightSuspiciousParts(content: string, reasons: string[]): React.ReactNode {
+export function highlightSuspiciousParts(content: string, reasons: string[]): string {
   let highlightedContent = content;
   
   // Define patterns to look for based on the reasons
