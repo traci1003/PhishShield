@@ -13,6 +13,8 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getUserByStripeCustomerId(customerId: string): Promise<User[]>;
+  updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
 
   // Message operations
   getMessage(id: number): Promise<Message | undefined>;
@@ -55,6 +57,21 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+  
+  async getUserByStripeCustomerId(customerId: string): Promise<User[]> {
+    return await db.select()
+      .from(users)
+      .where(eq(users.stripeCustomerId, customerId));
+  }
+  
+  async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
+    const [updatedUser] = await db.update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+      
+    return updatedUser;
   }
 
   // Message methods

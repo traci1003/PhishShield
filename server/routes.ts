@@ -4,6 +4,7 @@ import { storage } from "./storage";
 // Import NLP and URL analyzer functions directly from the file
 import { aiAssistant } from "./ai-service";
 import { notificationService } from "./notification-service";
+import { stripeService } from "./stripe-service";
 import { 
   scanTextSchema, 
   scanUrlSchema, 
@@ -255,6 +256,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Device token deletion error:", error);
       res.status(500).json({ message: "Error deleting device token" });
+    }
+  });
+  
+  // Get user's subscription status
+  apiRouter.get("/subscription", async (req: Request, res: Response) => {
+    try {
+      // For now, we'll use user ID 1 (demo user)
+      const userId = 1;
+      
+      // Get subscription details from Stripe service
+      const subscriptionDetails = await stripeService.getSubscriptionDetails(userId);
+      
+      // Return subscription details
+      res.json(subscriptionDetails);
+    } catch (error) {
+      console.error("Subscription status error:", error);
+      res.status(500).json({ message: "Error retrieving subscription status" });
+    }
+  });
+  
+  // Create a Stripe checkout session for subscription
+  apiRouter.post("/create-checkout-session", async (req: Request, res: Response) => {
+    try {
+      // For now, we'll use user ID 1 (demo user)
+      const userId = 1;
+      
+      // Get price ID from request body
+      const { priceId } = req.body;
+      
+      if (!priceId) {
+        return res.status(400).json({ message: "Price ID is required" });
+      }
+      
+      // Create checkout session URL
+      const sessionUrl = await stripeService.createCheckoutSession(userId, priceId);
+      
+      // Return the URL to redirect the user to Stripe checkout
+      res.json({ url: sessionUrl });
+    } catch (error) {
+      console.error("Checkout session error:", error);
+      res.status(500).json({ message: "Error creating checkout session" });
+    }
+  });
+  
+  // Stripe webhook endpoint
+  apiRouter.post("/webhook", express.raw({ type: 'application/json' }), async (req: Request, res: Response) => {
+    try {
+      // Get Stripe signature from headers
+      const signature = req.headers['stripe-signature'] as string;
+      
+      if (!signature) {
+        return res.status(400).json({ message: "Missing Stripe signature" });
+      }
+      
+      // Process webhook event
+      await stripeService.handleWebhookEvent(req.body, signature);
+      
+      // Return success
+      res.status(200).end();
+    } catch (error) {
+      console.error("Webhook error:", error);
+      res.status(400).end();
     }
   });
 
