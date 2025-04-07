@@ -8,28 +8,66 @@ import Scan from "@/pages/Scan";
 import History from "@/pages/History";
 import Account from "@/pages/Account";
 import AppLayout from "@/components/layout/app-layout";
+import { useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 
 function App() {
+  const [isCapacitor, setIsCapacitor] = useState(false);
+  
+  useEffect(() => {
+    // Detect if running in Capacitor environment
+    const platform = Capacitor.getPlatform();
+    setIsCapacitor(platform === 'ios' || platform === 'android');
+    
+    // Add mobile-specific event listeners
+    if (platform === 'ios' || platform === 'android') {
+      document.addEventListener('backbutton', () => {
+        // Handle back button for Android
+        console.log('Back button pressed');
+      });
+      
+      document.addEventListener('pause', () => {
+        // App sent to background
+        console.log('App paused');
+      });
+      
+      document.addEventListener('resume', () => {
+        // App brought back to foreground
+        console.log('App resumed');
+      });
+    }
+    
+    // Prevent pull-to-refresh on mobile
+    document.body.style.overscrollBehavior = 'none';
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <AppContent />
+      <div className={isCapacitor ? 'capacitor-environment' : ''}>
+        <AppContent isCapacitor={isCapacitor} />
+      </div>
       <Toaster />
     </QueryClientProvider>
   );
 }
 
-function AppContent() {
+function AppContent({ isCapacitor }: { isCapacitor: boolean }) {
   const [location] = useLocation();
+  
+  // Add safe area insets for mobile notches and rounded corners
+  const safeAreaClass = isCapacitor ? 'safe-area-insets' : '';
   
   return (
     <AppLayout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/scan" component={Scan} />
-        <Route path="/history" component={History} />
-        <Route path="/account" component={Account} />
-        <Route component={NotFound} />
-      </Switch>
+      <div className={safeAreaClass}>
+        <Switch>
+          <Route path="/" component={Dashboard} />
+          <Route path="/scan" component={Scan} />
+          <Route path="/history" component={History} />
+          <Route path="/account" component={Account} />
+          <Route component={NotFound} />
+        </Switch>
+      </div>
     </AppLayout>
   );
 }

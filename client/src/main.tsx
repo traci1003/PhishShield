@@ -1,13 +1,25 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { defineCustomElements } from '@ionic/pwa-elements/loader';
+import { Capacitor } from '@capacitor/core';
+
+// Initialize capacitor elements
+defineCustomElements(window);
 
 document.addEventListener('DOMContentLoaded', () => {
-  const meta = document.createElement('meta');
-  meta.name = 'theme-color';
-  meta.content = '#4f46e5'; // Primary color for theme
-  document.head.appendChild(meta);
+  // Meta tags for mobile
+  const viewportMeta = document.createElement('meta');
+  viewportMeta.name = 'viewport';
+  viewportMeta.content = 'width=device-width, initial-scale=1.0, viewport-fit=cover';
+  document.head.appendChild(viewportMeta);
   
+  const themeMeta = document.createElement('meta');
+  themeMeta.name = 'theme-color';
+  themeMeta.content = '#4f46e5'; // Primary color for theme
+  document.head.appendChild(themeMeta);
+  
+  // Set title
   const title = document.createElement('title');
   title.textContent = 'PhishShield AI';
   document.head.appendChild(title);
@@ -23,6 +35,21 @@ document.addEventListener('DOMContentLoaded', () => {
   iconsLink.rel = 'stylesheet';
   iconsLink.href = 'https://fonts.googleapis.com/icon?family=Material+Icons';
   document.head.appendChild(iconsLink);
+  
+  // Apple specific meta tags
+  if (Capacitor.getPlatform() === 'ios') {
+    const appleMobileWebAppCapable = document.createElement('meta');
+    appleMobileWebAppCapable.name = 'apple-mobile-web-app-capable';
+    appleMobileWebAppCapable.content = 'yes';
+    document.head.appendChild(appleMobileWebAppCapable);
+  
+    const appleMobileWebAppStatusBar = document.createElement('meta');
+    appleMobileWebAppStatusBar.name = 'apple-mobile-web-app-status-bar-style';
+    appleMobileWebAppStatusBar.content = 'black-translucent';
+    document.head.appendChild(appleMobileWebAppStatusBar);
+  }
 });
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Init app
+const root = createRoot(document.getElementById("root")!);
+root.render(<App />);
