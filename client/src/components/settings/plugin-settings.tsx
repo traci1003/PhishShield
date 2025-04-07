@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Check,
   Plug,
@@ -109,6 +110,8 @@ export default function PluginSettings() {
         return <Mail className="h-5 w-5" />;
       case 'sms':
         return <Smartphone className="h-5 w-5" />;
+      case 'social':
+        return <MessageSquare className="h-5 w-5" />;
       default:
         return <Plug className="h-5 w-5" />;
     }
@@ -119,7 +122,7 @@ export default function PluginSettings() {
     switch (pluginId) {
       case 'slack':
         return [
-          { id: 'teamName', label: 'Team Name', placeholder: 'Your Slack Team Name' },
+          { id: 'workspaceName', label: 'Workspace Name', placeholder: 'Your Slack Workspace Name' },
           { id: 'channelName', label: 'Channel Name', placeholder: 'The channel to monitor' }
         ];
       case 'email':
@@ -129,6 +132,24 @@ export default function PluginSettings() {
       case 'sms':
         return [
           { id: 'phoneNumber', label: 'Phone Number', placeholder: '+1234567890' }
+        ];
+      case 'social-media':
+        return [
+          { 
+            id: 'platform', 
+            label: 'Platform', 
+            placeholder: 'Select a platform',
+            type: 'select',
+            options: [
+              { value: 'facebook', label: 'Facebook' },
+              { value: 'twitter', label: 'Twitter/X' },
+              { value: 'instagram', label: 'Instagram' },
+              { value: 'linkedin', label: 'LinkedIn' },
+              { value: 'tiktok', label: 'TikTok' },
+              { value: 'reddit', label: 'Reddit' }
+            ] 
+          },
+          { id: 'username', label: 'Username', placeholder: '@yourusername' }
         ];
       default:
         return [];
@@ -223,15 +244,36 @@ export default function PluginSettings() {
             {configurePluginId && getConfigFields(configurePluginId).map(field => (
               <div key={field.id} className="space-y-2">
                 <Label htmlFor={field.id}>{field.label}</Label>
-                <Input 
-                  id={field.id}
-                  placeholder={field.placeholder}
-                  value={configValues[field.id] || ''}
-                  onChange={(e) => setConfigValues({
-                    ...configValues,
-                    [field.id]: e.target.value
-                  })}
-                />
+                {field.type === 'select' && field.options ? (
+                  <Select
+                    value={configValues[field.id] || ''}
+                    onValueChange={(value) => setConfigValues({
+                      ...configValues,
+                      [field.id]: value
+                    })}
+                  >
+                    <SelectTrigger id={field.id}>
+                      <SelectValue placeholder={field.placeholder} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {field.options.map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input 
+                    id={field.id}
+                    placeholder={field.placeholder}
+                    value={configValues[field.id] || ''}
+                    onChange={(e) => setConfigValues({
+                      ...configValues,
+                      [field.id]: e.target.value
+                    })}
+                  />
+                )}
               </div>
             ))}
           </div>

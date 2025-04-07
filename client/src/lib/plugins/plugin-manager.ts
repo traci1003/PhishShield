@@ -2,6 +2,7 @@ import { IPlugin, IPluginManager } from "./plugin-interface";
 import { smsPlugin } from "./sms-plugin";
 import { emailPlugin } from "./email-plugin";
 import { slackPlugin } from "./slack-plugin";
+import { socialMediaPlugin } from "./social-media-plugin";
 
 /**
  * Plugin Manager for handling all plugin operations
@@ -15,6 +16,7 @@ export class PluginManager implements IPluginManager {
     this.registerPlugin(smsPlugin);
     this.registerPlugin(emailPlugin);
     this.registerPlugin(slackPlugin);
+    this.registerPlugin(socialMediaPlugin);
   }
 
   /**

@@ -40,6 +40,14 @@ export class PluginServiceManager {
         requiresAuth: true,
         authUrl: slackService.generateAuthUrl(),
         userId
+      },
+      ["social-media"]: {
+        available: true, // Social media plugin is always available
+        enabled: false,
+        connected: false,
+        requiresAuth: false, // Uses manual configuration
+        authUrl: "",
+        userId
       }
     };
     
@@ -73,9 +81,69 @@ export class PluginServiceManager {
         return smsService.fetchMessages(limit);
       case PLUGIN_TYPES.SLACK:
         return slackService.fetchMessages(limit);
+      case "social-media":
+        // For social media, generate demo messages based on configured platform
+        if (pluginConnection.authData && (pluginConnection.authData as any).manualConfig) {
+          const config = (pluginConnection.authData as any).manualConfig;
+          return this.generateSocialMediaMessages(config.platform, limit);
+        }
+        return [];
       default:
         return [];
     }
+  }
+  
+  /**
+   * Generate sample social media messages for demonstration
+   */
+  private generateSocialMediaMessages(platform: string, limit: number): PluginMessage[] {
+    const messages: PluginMessage[] = [
+      {
+        externalId: "social1",
+        content: `Hey, check out this cool giveaway! Click this link to claim your prize: https://bit.ly/3fakelink`,
+        sender: {
+          id: "user123",
+          name: "Friend1",
+          handle: `@friend1_${platform}`
+        },
+        timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+        metadata: {
+          platform
+        },
+        urls: ["https://bit.ly/3fakelink"]
+      },
+      {
+        externalId: "social2",
+        content: `Important message from ${platform} support: We've noticed suspicious activity on your account. Please verify your details here: http://secure-${platform}.verify-now.com`,
+        sender: {
+          id: "user456",
+          name: `${platform}Support`,
+          handle: `@${platform}_support`
+        },
+        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+        metadata: {
+          platform,
+          verified: true
+        },
+        urls: [`http://secure-${platform}.verify-now.com`]
+      },
+      {
+        externalId: "social3",
+        content: `Did you see the news about what happened to that celebrity? 😲 Check it out: https://breaking-news.co/celebrity-scandal`,
+        sender: {
+          id: "user789",
+          name: "NewsUpdates",
+          handle: "@LatestNews"
+        },
+        timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+        metadata: {
+          platform
+        },
+        urls: ["https://breaking-news.co/celebrity-scandal"]
+      }
+    ];
+    
+    return messages.slice(0, limit);
   }
   
   /**
@@ -113,6 +181,8 @@ export class PluginServiceManager {
         return smsService.enableMonitoring();
       case PLUGIN_TYPES.SLACK:
         return true; // Slack doesn't need specific monitoring
+      case "social-media":
+        return true; // Social media plugin doesn't need specific monitoring
       default:
         return false;
     }
@@ -143,6 +213,8 @@ export class PluginServiceManager {
         return smsService.disableMonitoring();
       case PLUGIN_TYPES.SLACK:
         return true; // Slack doesn't need specific monitoring
+      case "social-media":
+        return true; // Social media plugin doesn't need specific monitoring
       default:
         return false;
     }
@@ -249,9 +321,26 @@ export class PluginServiceManager {
         return "sms";
       case PLUGIN_TYPES.SLACK:
         return "social";
+      case "social-media":
+        return "social";
       default:
         return "unknown";
     }
+  }
+  
+  /**
+   * Configure the social media plugin
+   */
+  async configureSocialMediaPlugin(userId: number, platform: string, username?: string): Promise<boolean> {
+    // Build configuration object
+    const config = {
+      platform,
+      username,
+      manualMode: true
+    };
+    
+    // Use the generic plugin configuration method
+    return this.configurePlugin(userId, "social-media", config);
   }
 }
 
