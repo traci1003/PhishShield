@@ -2,6 +2,13 @@ import { pgTable, text, serial, integer, boolean, jsonb, timestamp } from "drizz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Perplexity API models
+export const PERPLEXITY_MODELS = {
+  SMALL: "llama-3.1-sonar-small-128k-online",
+  LARGE: "llama-3.1-sonar-large-128k-online",
+  HUGE: "llama-3.1-sonar-huge-128k-online"
+};
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -78,3 +85,21 @@ export const scanUrlSchema = z.object({
 });
 
 export type ScanUrlRequest = z.infer<typeof scanUrlSchema>;
+
+// Schema for virtual assistant chat
+export const chatMessageSchema = z.object({
+  query: z.string().min(1, "Question is required").max(500, "Question is too long"),
+});
+
+export type ChatMessageRequest = z.infer<typeof chatMessageSchema>;
+
+export interface ChatResponse {
+  answer: string;
+  timestamp: string;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}
