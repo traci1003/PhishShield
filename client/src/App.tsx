@@ -20,13 +20,13 @@ import { notificationService } from "./lib/notification-service";
 import { AccessibilityProvider } from "@/contexts/accessibility-context";
 import Subscription from "@/pages/Subscription";
 
-// SVG Filters for color blindness simulations
-const ColorBlindnessFilters = () => (
+// SVG Filters for color blindness simulations and enhanced accessibility
+const AccessibilityFilters = () => (
   <svg
     className="absolute opacity-0 pointer-events-none w-0 h-0"
     aria-hidden="true"
   >
-    {/* Protanopia Filter (Red-Blind) */}
+    {/* Protanopia Filter (Red-Blind) - Enhanced for better threat detection */}
     <filter id="protanopia-filter">
       <feColorMatrix
         type="matrix"
@@ -35,9 +35,15 @@ const ColorBlindnessFilters = () => (
                 0,     0.242, 0.758, 0, 0
                 0,     0,     0,     1, 0"
       />
+      {/* Enhance contrast for protanopia */}
+      <feComponentTransfer>
+        <feFuncR type="gamma" exponent="0.9" />
+        <feFuncG type="gamma" exponent="0.9" />
+        <feFuncB type="gamma" exponent="0.9" />
+      </feComponentTransfer>
     </filter>
     
-    {/* Deuteranopia Filter (Green-Blind) */}
+    {/* Deuteranopia Filter (Green-Blind) - Enhanced for better threat detection */}
     <filter id="deuteranopia-filter">
       <feColorMatrix
         type="matrix"
@@ -46,9 +52,15 @@ const ColorBlindnessFilters = () => (
                 0,     0.3,   0.7, 0, 0
                 0,     0,     0,   1, 0"
       />
+      {/* Enhance contrast for deuteranopia */}
+      <feComponentTransfer>
+        <feFuncR type="gamma" exponent="0.9" />
+        <feFuncG type="gamma" exponent="0.9" />
+        <feFuncB type="gamma" exponent="0.9" />
+      </feComponentTransfer>
     </filter>
     
-    {/* Tritanopia Filter (Blue-Blind) */}
+    {/* Tritanopia Filter (Blue-Blind) - Enhanced for better threat detection */}
     <filter id="tritanopia-filter">
       <feColorMatrix
         type="matrix"
@@ -56,6 +68,31 @@ const ColorBlindnessFilters = () => (
                 0,    0.433, 0.567, 0, 0
                 0,    0.475, 0.525, 0, 0
                 0,    0,     0,     1, 0"
+      />
+      {/* Enhance contrast for tritanopia */}
+      <feComponentTransfer>
+        <feFuncR type="gamma" exponent="0.9" />
+        <feFuncG type="gamma" exponent="0.9" />
+        <feFuncB type="gamma" exponent="0.9" />
+      </feComponentTransfer>
+    </filter>
+    
+    {/* Special filter for high-contrast threat visualization */}
+    <filter id="high-contrast-threat-filter">
+      {/* Increase contrast to maximum */}
+      <feComponentTransfer>
+        <feFuncR type="linear" slope="3" intercept="-0.5" />
+        <feFuncG type="linear" slope="3" intercept="-0.5" />
+        <feFuncB type="linear" slope="3" intercept="-0.5" />
+      </feComponentTransfer>
+    </filter>
+
+    {/* Edge enhancement filter for high contrast mode */}
+    <filter id="edge-enhance" x="-10%" y="-10%" width="120%" height="120%">
+      <feConvolveMatrix 
+        order="3" 
+        kernelMatrix="0 -1 0 -1 5 -1 0 -1 0"
+        preserveAlpha="true"
       />
     </filter>
   </svg>
@@ -107,7 +144,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AccessibilityProvider>
         <div className={isCapacitor ? 'capacitor-environment' : ''}>
-          <ColorBlindnessFilters />
+          <AccessibilityFilters />
           <AppContent isCapacitor={isCapacitor} />
         </div>
         <Toaster />

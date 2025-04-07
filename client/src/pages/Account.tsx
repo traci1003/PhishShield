@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, User, HelpCircle, CreditCard, Lock, LogOut, BrainCircuit, FileText } from "lucide-react";
+import { Shield, User, HelpCircle, CreditCard, Lock, LogOut, BrainCircuit, FileText, Settings } from "lucide-react";
 import AIAssistant from "@/components/account/ai-assistant";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "wouter";
+import AccessibilitySettings from "@/components/accessibility/accessibility-settings";
 
 export default function Account() {
   const [activeTab, setActiveTab] = useState("account");
@@ -26,8 +27,9 @@ export default function Account() {
         onValueChange={setActiveTab}
         className="w-full"
       >
-        <TabsList className="grid grid-cols-2 mb-6">
+        <TabsList className="grid grid-cols-3 mb-6">
           <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="accessibility">Accessibility</TabsTrigger>
           <TabsTrigger value="assistant">Virtual Assistant</TabsTrigger>
         </TabsList>
         
@@ -108,6 +110,14 @@ export default function Account() {
               <Button 
                 variant="outline" 
                 className="w-full justify-start"
+                onClick={() => setActiveTab("accessibility")}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Accessibility Settings
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
                 onClick={() => setActiveTab("assistant")}
               >
                 <BrainCircuit className="h-4 w-4 mr-2" />
@@ -144,6 +154,21 @@ export default function Account() {
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
           </Button>
+        </TabsContent>
+        
+        <TabsContent value="accessibility" className="mt-0">
+          <div className={isMobile ? "w-full" : "max-w-2xl mx-auto"}>
+            <AccessibilitySettings />
+          </div>
+          <div className="mt-6 text-center">
+            <Button 
+              variant="outline" 
+              onClick={() => setActiveTab("account")} 
+              className="mx-auto"
+            >
+              Back to Account
+            </Button>
+          </div>
         </TabsContent>
         
         <TabsContent value="assistant" className="mt-0">

@@ -134,15 +134,15 @@
   
   /* High Contrast Threat Visualization */
   .high-contrast .threat-safe {
-    @apply bg-green-700 text-white border-green-300 border-2;
+    @apply bg-green-700 text-white border-green-300 border-2 font-bold;
   }
   
   .high-contrast .threat-suspicious {
-    @apply bg-yellow-500 text-black border-black border-2;
+    @apply bg-yellow-500 text-black border-black border-2 font-bold;
   }
   
   .high-contrast .threat-phishing {
-    @apply bg-red-700 text-white border-white border-dashed border-2;
+    @apply bg-red-700 text-white border-white border-dashed border-2 font-bold;
   }
   
   .high-contrast .threat-safe-icon {
@@ -157,9 +157,44 @@
     @apply text-white bg-red-700 p-1.5 rounded-full;
   }
   
+  /* High contrast threat level indicators for messages and history */
+  .high-contrast .message-threat-indicator.threat-safe {
+    @apply border-l-8 border-l-green-500 bg-green-900 text-white font-bold;
+  }
+  
+  .high-contrast .message-threat-indicator.threat-suspicious {
+    @apply border-l-8 border-l-yellow-400 bg-yellow-600 text-black font-bold;
+  }
+  
+  .high-contrast .message-threat-indicator.threat-phishing {
+    @apply border-l-8 border-l-red-500 bg-red-900 text-white font-bold;
+  }
+  
+  /* High contrast badges for threats */
+  .high-contrast .threat-badge.threat-safe {
+    @apply bg-green-700 text-white px-2 py-1 rounded-md font-bold border-2 border-white;
+  }
+  
+  .high-contrast .threat-badge.threat-suspicious {
+    @apply bg-yellow-500 text-black px-2 py-1 rounded-md font-bold border-2 border-black;
+  }
+  
+  .high-contrast .threat-badge.threat-phishing {
+    @apply bg-red-700 text-white px-2 py-1 rounded-md font-bold border-2 border-white;
+  }
+  
   /* High contrast detection highlights */
   .high-contrast span.bg-warning-100 {
     @apply bg-yellow-500 text-black border-black border-2 font-bold px-1 rounded;
+  }
+  
+  /* High contrast link highlights */
+  .high-contrast .suspicious-link {
+    @apply bg-yellow-500 text-black px-1 py-0.5 rounded font-bold border-black border-2;
+  }
+  
+  .high-contrast .phishing-link {
+    @apply bg-red-700 text-white px-1 py-0.5 rounded font-bold border-white border-2;
   }
   
   /* Normal Threat Visualization (for comparison) */
