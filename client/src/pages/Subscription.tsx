@@ -241,6 +241,10 @@ export default function Subscription() {
           priority support, and advanced threat detection for the most comprehensive digital security experience.
         </p>
         <div className="text-xs text-gray-500 flex justify-center space-x-4">
+          <Link href="/faq">
+            <a className="hover:text-primary-600 transition-colors">FAQ</a>
+          </Link>
+          <span>•</span>
           <Link href="/privacy-policy">
             <a className="hover:text-primary-600 transition-colors">Privacy Policy</a>
           </Link>

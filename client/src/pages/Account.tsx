@@ -113,10 +113,12 @@ export default function Account() {
                 <BrainCircuit className="h-4 w-4 mr-2" />
                 Ask Virtual Assistant
               </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <HelpCircle className="h-4 w-4 mr-2" />
-                FAQ
-              </Button>
+              <Link href="/faq">
+                <Button variant="outline" className="w-full justify-start">
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  FAQ
+                </Button>
+              </Link>
               <Button variant="outline" className="w-full justify-start">
                 <span className="material-icons text-sm mr-2">contact_support</span>
                 Contact Support
