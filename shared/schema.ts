@@ -36,6 +36,7 @@ export const insertMessageSchema = createInsertSchema(messages).pick({
   threatLevel: true,
   threatDetails: true,
   source: true,
+  scanDate: true,
 });
 
 export type InsertMessage = z.infer<typeof insertMessageSchema>;

@@ -1,6 +1,9 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { storage } from "./storage";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 
 const app = express();
 app.use(express.json());
@@ -37,6 +40,45 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  try {
+    // Create database tables (using drizzle push)
+    log("Setting up database schema...");
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL
+    )`);
+    
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS messages (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      content TEXT NOT NULL,
+      sender TEXT,
+      scan_date TIMESTAMP DEFAULT NOW() NOT NULL,
+      threat_level TEXT NOT NULL,
+      threat_details JSONB,
+      is_read BOOLEAN DEFAULT FALSE NOT NULL,
+      source TEXT
+    )`);
+    
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS protection_settings (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      sms_protection BOOLEAN DEFAULT TRUE NOT NULL,
+      email_protection BOOLEAN DEFAULT TRUE NOT NULL,
+      social_media_protection BOOLEAN DEFAULT FALSE NOT NULL,
+      on_device_scanning BOOLEAN DEFAULT FALSE NOT NULL
+    )`);
+    
+    // Seed database with initial data
+    log("Seeding database with demo data...");
+    await storage.seedDatabase();
+    
+    log("Database setup complete");
+  } catch (error) {
+    log(`Database setup error: ${error}`);
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
