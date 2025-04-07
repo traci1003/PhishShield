@@ -11,6 +11,8 @@ import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import FAQ from "@/pages/FAQ";
 import ContactSupport from "@/pages/ContactSupport";
+import LiveChat from "@/pages/LiveChat";
+import KnowledgeBase from "@/pages/KnowledgeBase";
 import AppLayout from "@/components/layout/app-layout";
 import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
@@ -133,6 +135,8 @@ function AppContent({ isCapacitor }: { isCapacitor: boolean }) {
           <Route path="/terms-of-service" component={TermsOfService} />
           <Route path="/faq" component={FAQ} />
           <Route path="/contact-support" component={ContactSupport} />
+          <Route path="/live-chat" component={LiveChat} />
+          <Route path="/knowledge-base" component={KnowledgeBase} />
           <Route component={NotFound} />
         </Switch>
       </div>

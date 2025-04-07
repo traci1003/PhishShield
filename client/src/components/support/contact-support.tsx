@@ -277,7 +277,10 @@ export default function ContactSupport() {
               <p className="text-gray-600 mt-1">
                 Available Monday to Friday, 9am - 5pm EST
               </p>
-              <Button className="mt-4 bg-[#c1c8fb] hover:bg-[#a8b0f8] text-[#1E1442] rounded-full font-medium">
+              <Button 
+                className="mt-4 bg-[#c1c8fb] hover:bg-[#a8b0f8] text-[#1E1442] rounded-full font-medium"
+                onClick={() => window.location.href = "/live-chat"}
+              >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-2">
                   <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H6L4 18V4H20V16Z" fill="#1E1442"/>
                 </svg>
@@ -299,7 +302,10 @@ export default function ContactSupport() {
               <p className="text-gray-600 mt-1">
                 Find answers to common questions in our help center
               </p>
-              <Button className="mt-4 bg-[#c1c8fb] hover:bg-[#a8b0f8] text-[#1E1442] rounded-full font-medium">
+              <Button 
+                className="mt-4 bg-[#c1c8fb] hover:bg-[#a8b0f8] text-[#1E1442] rounded-full font-medium"
+                onClick={() => window.location.href = "/knowledge-base"}
+              >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-2">
                   <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20ZM9 13H15V15H9V13ZM9 16H15V18H9V16ZM9 10H11V12H9V10Z" fill="#1E1442"/>
                 </svg>
