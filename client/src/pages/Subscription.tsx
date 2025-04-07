@@ -15,9 +15,10 @@ interface SubscriptionStatus {
 }
 
 // Define price IDs for Stripe
+// These would normally be real Stripe price IDs
 const PRICE_IDS = {
-  premium: 'price_1PakqzJFUUCdTk7PYnVIwJMl', // Stripe price ID for premium plan
-  family: 'price_1Pakr7JFUUCdTk7PTqbLyT3o'   // Stripe price ID for family plan
+  premium: 'price_premium_mock', // Mock price ID for premium plan
+  family: 'price_family_mock'    // Mock price ID for family plan
 };
 
 export default function Subscription() {
@@ -139,8 +140,10 @@ export default function Subscription() {
     }
   }, [toast]);
 
-  // Determine current plan
-  const currentPlan = subscriptionStatus?.plan || 'basic';
+  // Determine current plan (handle undefined subscriptionStatus)
+  const currentPlan = (subscriptionStatus && 'plan' in subscriptionStatus) 
+    ? subscriptionStatus.plan 
+    : 'basic';
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -158,7 +161,7 @@ export default function Subscription() {
         </div>
       ) : (
         <>
-          {subscriptionStatus?.status === 'active' && (
+          {subscriptionStatus && subscriptionStatus.status === 'active' && (
             <div className="mb-8 p-4 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center">
                 <CheckCircle2 className="h-5 w-5 text-green-500 mr-2" />

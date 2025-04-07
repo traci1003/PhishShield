@@ -2,11 +2,8 @@ import Stripe from 'stripe';
 import { storage } from './storage';
 
 // Initialize Stripe with the secret key from environment variables
-// For now, this will be a mock implementation until we get the real API key
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_mock';
-const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2025-03-31.basil',
-});
+const stripe = new Stripe(stripeSecretKey);
 
 class StripeService {
   /**
@@ -214,7 +211,11 @@ class StripeService {
   /**
    * Get subscription details for a user
    */
-  async getSubscriptionDetails(userId: number): Promise<any> {
+  async getSubscriptionDetails(userId: number): Promise<{
+    status: string;
+    plan: string;
+    currentPeriodEnd: string | null;
+  }> {
     try {
       // Get the user
       const user = await storage.getUser(userId);
@@ -243,9 +244,11 @@ class StripeService {
       // Get subscription details from Stripe
       const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
       
-      // Safely access current_period_end
-      const currentPeriodEnd = subscription.current_period_end 
-        ? new Date(subscription.current_period_end * 1000).toISOString() 
+      // Access current_period_end safely - casting subscription to any to avoid type issues
+      const subscriptionData = subscription as any;
+      const endTimestamp = subscriptionData.current_period_end;
+      const currentPeriodEnd = endTimestamp
+        ? new Date(endTimestamp * 1000).toISOString() 
         : null;
       
       return {
