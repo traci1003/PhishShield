@@ -1,8 +1,11 @@
 import { MessageScanResult } from "@/lib/natural-language";
 import { UrlAnalysisResult, getThreatColor, getThreatIcon } from "@/lib/link-analyzer";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, CheckCircle, HelpCircle, Link as LinkIcon, RefreshCw, Flag, AlertCircle, Shield } from "lucide-react";
+import { AlertTriangle, CheckCircle, HelpCircle, Link as LinkIcon, RefreshCw, Flag, AlertCircle, Shield, Database } from "lucide-react";
 import { useEffect, useState } from "react";
+import ThreatIntelligenceDetails from "./threat-intelligence-details";
+import { useAccessibility } from "@/contexts/accessibility-context";
+import { ThreatData } from "@shared/schema";
 
 interface ScanResultProps {
   textResult: MessageScanResult | null;
@@ -12,6 +15,7 @@ interface ScanResultProps {
 
 export default function ScanResult({ textResult, urlResult, onNewScan }: ScanResultProps) {
   const [showContent, setShowContent] = useState(false);
+  const { highContrast } = useAccessibility();
   
   useEffect(() => {
     // Delayed animation start
@@ -92,7 +96,7 @@ export default function ScanResult({ textResult, urlResult, onNewScan }: ScanRes
             Analyzed URL
           </h3>
           <div className="bg-gray-50 p-4 rounded-lg text-gray-700 flex items-center border border-gray-100 shadow-inner group hover:bg-gray-100 transition-colors duration-300 break-all">
-            <span className="text-blue-500 hover:underline">{urlResult.url}</span>
+            <span className="text-blue-500 hover:underline">{urlResult.content}</span>
           </div>
         </div>
       )}
@@ -124,6 +128,16 @@ export default function ScanResult({ textResult, urlResult, onNewScan }: ScanRes
           </div>
         )}
       </div>
+      
+      {/* Display threat intelligence data if available */}
+      {(textResult?.analysis.threatData || urlResult?.threatData) && (
+        <div className={`${showContent ? 'fade-in' : 'opacity-0'}`} style={{transitionDelay: '350ms'}}>
+          <ThreatIntelligenceDetails 
+            threatData={textResult?.analysis.threatData || urlResult?.threatData} 
+            className={`mb-6 ${highContrast ? "border-slate-400" : ""}`}
+          />
+        </div>
+      )}
       
       {threatLevel !== 'safe' && (
         <div className={`mb-6 bg-gray-50 p-5 rounded-lg border border-gray-100 ${showContent ? 'fade-in' : 'opacity-0'}`} style={{transitionDelay: '400ms'}}>

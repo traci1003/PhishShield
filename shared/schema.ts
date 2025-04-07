@@ -146,3 +146,49 @@ export const contactFormSchema = z.object({
 });
 
 export type ContactFormRequest = z.infer<typeof contactFormSchema>;
+
+// Threat Intelligence Types
+export interface ThreatData {
+  domainInfo?: {
+    domain: string;
+    reputationScore: number;
+    malicious: boolean;
+    suspicious: boolean;
+    categories: string[];
+    reportedTimes: number;
+    sources: string[];
+    lastChecked: string;
+  };
+  senderInfo?: {
+    email: string;
+    domain: string;
+    reputationScore: number;
+    hasDmarc: boolean;
+    hasSpf: boolean;
+    hasDkim: boolean;
+    securityLevel: string;
+    creationDate: string | null;
+  };
+}
+
+export interface EnhancedAnalysisResult {
+  threatLevel: string;
+  reasons: string[];
+  content: string;
+  threatData?: ThreatData;
+}
+
+// Enhanced scan request schemas
+export const enhancedScanTextSchema = scanTextSchema.extend({
+  enhancedAnalysis: z.boolean().optional().default(false),
+});
+
+export type EnhancedScanTextRequest = z.infer<typeof enhancedScanTextSchema>;
+
+export const enhancedScanUrlSchema = scanUrlSchema.extend({
+  enhancedAnalysis: z.boolean().optional().default(false),
+  saveToHistory: z.boolean().optional().default(false),
+  source: z.enum(["sms", "email", "social", "manual"]).optional().default("manual"),
+});
+
+export type EnhancedScanUrlRequest = z.infer<typeof enhancedScanUrlSchema>;

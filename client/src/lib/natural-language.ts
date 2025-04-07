@@ -1,9 +1,11 @@
 import { apiRequest } from "./queryClient";
+import { ThreatData } from "@shared/schema";
 
 export interface PhishingAnalysisResult {
   threatLevel: string;
   reasons: string[];
   content: string;
+  threatData?: ThreatData;
 }
 
 export interface MessageScanResult {
@@ -15,6 +17,7 @@ export interface MessageScanResult {
     threatLevel: string;
     threatDetails: {
       reasons: string[];
+      threatData?: ThreatData;
     };
     scanDate: string;
   };
@@ -22,16 +25,29 @@ export interface MessageScanResult {
 
 /**
  * Analyzes text for phishing indicators by sending a request to the backend
+ * @param content The text content to analyze
+ * @param sender The sender of the message (optional)
+ * @param source The source of the message (e.g., "sms", "email", etc.)
+ * @param useEnhancedAnalysis Whether to use advanced threat intelligence
+ * @param saveToHistory Whether to save the result to scan history
  */
 export async function analyzeText(
   content: string, 
   sender?: string, 
-  source: 'sms' | 'email' | 'social' | 'manual' = 'manual'
+  source: 'sms' | 'email' | 'social' | 'manual' = 'manual',
+  useEnhancedAnalysis: boolean = false,
+  saveToHistory: boolean = true
 ): Promise<MessageScanResult> {
   const response = await apiRequest(
     'POST',
     '/api/scan/text',
-    { content, sender, source }
+    { 
+      content, 
+      sender, 
+      source,
+      enhancedAnalysis: useEnhancedAnalysis,
+      saveToHistory
+    }
   );
   
   return response.json();

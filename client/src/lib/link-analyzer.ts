@@ -1,19 +1,35 @@
 import { apiRequest } from "./queryClient";
+import { ThreatData } from "@shared/schema";
 
 export interface UrlAnalysisResult {
-  url: string;
   threatLevel: string;
   reasons: string[];
+  content: string;
+  threatData?: ThreatData;
 }
 
 /**
  * Analyzes URL for threats by sending a request to the backend
+ * @param url The URL to analyze
+ * @param useEnhancedAnalysis Whether to use advanced threat intelligence
+ * @param saveToHistory Whether to save the result to scan history
+ * @param source Source of the URL (e.g., "sms", "email", etc.)
  */
-export async function analyzeUrl(url: string): Promise<UrlAnalysisResult> {
+export async function analyzeUrl(
+  url: string, 
+  useEnhancedAnalysis: boolean = false,
+  saveToHistory: boolean = false,
+  source: 'sms' | 'email' | 'social' | 'manual' = 'manual'
+): Promise<UrlAnalysisResult> {
   const response = await apiRequest(
     'POST',
     '/api/scan/url',
-    { url }
+    { 
+      url, 
+      enhancedAnalysis: useEnhancedAnalysis,
+      saveToHistory,
+      source
+    }
   );
   
   return response.json();

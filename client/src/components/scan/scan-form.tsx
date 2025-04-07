@@ -4,14 +4,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { analyzeText } from "@/lib/natural-language";
 import { analyzeUrl, extractUrls } from "@/lib/link-analyzer";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, Database, ShieldCheck } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const textFormSchema = z.object({
   content: z.string().min(1, {
@@ -19,12 +21,15 @@ const textFormSchema = z.object({
   }),
   sender: z.string().optional(),
   source: z.enum(["sms", "email", "social", "manual"]).default("manual"),
+  useAdvancedScan: z.boolean().default(false),
 });
 
 const urlFormSchema = z.object({
   url: z.string().url({
     message: "Please enter a valid URL starting with http:// or https://",
   }),
+  saveToHistory: z.boolean().default(true),
+  useAdvancedScan: z.boolean().default(false),
 });
 
 interface ScanFormProps {
@@ -49,6 +54,7 @@ export default function ScanForm({
       content: "",
       sender: "",
       source: "manual",
+      useAdvancedScan: true,
     },
   });
 
@@ -56,13 +62,21 @@ export default function ScanForm({
     resolver: zodResolver(urlFormSchema),
     defaultValues: {
       url: "",
+      saveToHistory: true,
+      useAdvancedScan: true,
     },
   });
 
   const onTextSubmit = async (values: z.infer<typeof textFormSchema>) => {
     try {
       onScanStart();
-      const result = await analyzeText(values.content, values.sender, values.source as any);
+      const result = await analyzeText(
+        values.content, 
+        values.sender, 
+        values.source as any, 
+        values.useAdvancedScan, // Use advanced threat intelligence
+        true // Save to history
+      );
       onScanComplete(result);
     } catch (error) {
       toast({
@@ -77,7 +91,13 @@ export default function ScanForm({
   const onUrlSubmit = async (values: z.infer<typeof urlFormSchema>) => {
     try {
       onScanStart();
-      const result = await analyzeUrl(values.url);
+      const source: 'sms' | 'email' | 'social' | 'manual' = 'manual';
+      const result = await analyzeUrl(
+        values.url, 
+        values.useAdvancedScan, // Use advanced threat intelligence
+        values.saveToHistory, // Save to history
+        source // Source of the URL - use manual default
+      );
       onUrlScanComplete(result);
     } catch (error) {
       toast({
@@ -173,6 +193,44 @@ export default function ScanForm({
                 />
               </div>
               
+              <Collapsible className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <CollapsibleTrigger className="flex w-full items-center justify-between">
+                  <div className="flex items-center">
+                    <Database className="h-4 w-4 mr-2 text-primary-600" />
+                    <span className="text-sm font-medium">Advanced Scan Settings</span>
+                  </div>
+                  <div className="text-xs text-gray-500">Currently using enhanced protection</div>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-3">
+                  <div className="space-y-3">
+                    <FormField
+                      control={textForm.control}
+                      name="useAdvancedScan"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-sm font-medium flex items-center">
+                              <ShieldCheck className="h-4 w-4 mr-2 text-primary-500" />
+                              Enhanced Threat Intelligence
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Use advanced threat database and AI analysis to improve detection rates
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              className="data-[state=checked]:bg-primary-500"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+              
               <Button 
                 type="submit" 
                 className={`w-full relative overflow-hidden ${isScanning ? 'bg-primary-600' : 'bg-gradient-shield hover:shadow-lg transition-all duration-300'}`}
@@ -225,6 +283,69 @@ export default function ScanForm({
                   </FormItem>
                 )}
               />
+              
+              <Collapsible className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <CollapsibleTrigger className="flex w-full items-center justify-between">
+                  <div className="flex items-center">
+                    <Database className="h-4 w-4 mr-2 text-primary-600" />
+                    <span className="text-sm font-medium">Advanced Scan Settings</span>
+                  </div>
+                  <div className="text-xs text-gray-500">Enhanced protection enabled</div>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-3">
+                  <div className="space-y-3">
+                    <FormField
+                      control={urlForm.control}
+                      name="useAdvancedScan"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-sm font-medium flex items-center">
+                              <ShieldCheck className="h-4 w-4 mr-2 text-primary-500" />
+                              Enhanced Threat Intelligence
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Use advanced reputation databases and AI analysis to detect malicious URLs
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              className="data-[state=checked]:bg-primary-500"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={urlForm.control}
+                      name="saveToHistory"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-sm font-medium flex items-center">
+                              <span className="material-icons-outlined text-primary-500 mr-2 text-base">history</span>
+                              Save to Scan History
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Save this scan to your history for future reference
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              className="data-[state=checked]:bg-primary-500"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
               
               <Button 
                 type="submit" 

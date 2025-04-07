@@ -6,13 +6,18 @@ import { aiAssistant } from "./ai-service";
 import { notificationService } from "./notification-service";
 import { stripeService } from "./stripe-service";
 import { emailService } from "./email-service";
+import { threatIntelligence } from "./threat-intelligence";
 import { 
   scanTextSchema, 
   scanUrlSchema, 
   insertMessageSchema,
   chatMessageSchema,
   deviceTokenSchema,
-  contactFormSchema
+  contactFormSchema,
+  enhancedScanTextSchema,
+  enhancedScanUrlSchema,
+  EnhancedAnalysisResult,
+  ThreatData
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -76,14 +81,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Scan text for phishing
   apiRouter.post("/scan/text", async (req: Request, res: Response) => {
     try {
-      // Validate the request data
-      const data = scanTextSchema.parse(req.body);
+      // Validate the request data using the enhanced schema
+      const data = enhancedScanTextSchema.parse(req.body);
       
       // In a real app, we'd get the userId from authentication
       const userId = 1; // Demo user ID
       
       // Analyze text for phishing indicators
-      const analysisResult = await analyzeTextForPhishing(data.content);
+      let analysisResult: EnhancedAnalysisResult;
+      
+      if (data.enhancedAnalysis) {
+        // Use enhanced analysis with threat intelligence
+        analysisResult = await analyzeTextWithThreatIntelligence(data.content, data.sender);
+      } else {
+        // Use standard analysis
+        analysisResult = await analyzeTextForPhishing(data.content);
+      }
       
       // Create a message record
       const message = await storage.createMessage({
@@ -92,7 +105,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sender: data.sender || "Manual Scan",
         threatLevel: analysisResult.threatLevel,
         threatDetails: {
-          reasons: analysisResult.reasons
+          reasons: analysisResult.reasons,
+          threatData: analysisResult.threatData
         },
         source: data.source
       });
@@ -137,6 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const validationError = fromZodError(error);
         return res.status(400).json({ message: validationError.message });
       }
+      console.error("Text scan error:", error);
       res.status(500).json({ message: "Error scanning text" });
     }
   });
@@ -144,11 +159,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Scan URL for threats
   apiRouter.post("/scan/url", async (req: Request, res: Response) => {
     try {
-      // Validate the request data
-      const data = scanUrlSchema.parse(req.body);
+      // Validate the request data using the enhanced schema
+      const data = enhancedScanUrlSchema.parse(req.body);
+      
+      // In a real app, we'd get the userId from authentication
+      const userId = 1; // Demo user ID
       
       // Analyze URL for threats
-      const analysisResult = await analyzeUrlForThreats(data.url);
+      let analysisResult: EnhancedAnalysisResult;
+      
+      if (data.enhancedAnalysis) {
+        // Use enhanced analysis with threat intelligence
+        analysisResult = await analyzeUrlWithThreatIntelligence(data.url);
+      } else {
+        // Use standard analysis
+        const basicResult = await analyzeUrlForThreats(data.url);
+        analysisResult = {
+          threatLevel: basicResult.threatLevel,
+          reasons: basicResult.reasons,
+          content: data.url
+        };
+      }
+      
+      // If requested, save this scan to history
+      if (data.saveToHistory) {
+        // Create a message record
+        await storage.createMessage({
+          userId,
+          content: data.url,
+          sender: data.source || "Manual URL Scan",
+          threatLevel: analysisResult.threatLevel,
+          threatDetails: {
+            reasons: analysisResult.reasons,
+            threatData: analysisResult.threatData
+          },
+          source: data.source || "manual"
+        });
+      }
       
       // Return the analysis result
       res.json(analysisResult);
@@ -157,6 +204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const validationError = fromZodError(error);
         return res.status(400).json({ message: validationError.message });
       }
+      console.error("URL scan error:", error);
       res.status(500).json({ message: "Error scanning URL" });
     }
   });
@@ -506,4 +554,156 @@ async function analyzeUrlForThreats(url: string) {
     threatLevel,
     reasons
   };
+}
+
+// Enhanced URL analysis with Threat Intelligence
+async function analyzeUrlWithThreatIntelligence(url: string): Promise<EnhancedAnalysisResult> {
+  // Get the basic analysis first
+  const basicAnalysis = await analyzeUrlForThreats(url);
+  
+  // Use threat intelligence service to get additional data
+  const threatIntelData = await threatIntelligence.queryUrl(url);
+  
+  // Combine reasons from both analyses
+  const allReasons = [...basicAnalysis.reasons];
+  
+  // Add threat intelligence specific reasons
+  if (threatIntelData.malicious) {
+    allReasons.push(`URL reported as malicious by ${threatIntelData.sources.join(', ')}`);
+  }
+  
+  if (threatIntelData.suspicious) {
+    allReasons.push(`URL flagged as suspicious (reputation score: ${threatIntelData.details.reputationScore}/100)`);
+  }
+  
+  if (threatIntelData.details.categories.length > 0) {
+    allReasons.push(`URL categorized as: ${threatIntelData.details.categories.join(', ')}`);
+  }
+  
+  // Determine threat level considering both analyses
+  let threatLevel = basicAnalysis.threatLevel;
+  
+  // Threat intelligence can escalate the threat level
+  if (threatIntelData.malicious) {
+    threatLevel = 'phishing';
+  } else if (threatIntelData.suspicious && threatLevel === 'safe') {
+    threatLevel = 'suspicious';
+  }
+  
+  // Create threat data for storage and display
+  const threatData: ThreatData = {
+    domainInfo: {
+      domain: threatIntelData.domain,
+      reputationScore: threatIntelData.details.reputationScore,
+      malicious: threatIntelData.malicious,
+      suspicious: threatIntelData.suspicious,
+      categories: threatIntelData.details.categories,
+      reportedTimes: threatIntelData.details.reportedTimes,
+      sources: threatIntelData.sources,
+      lastChecked: threatIntelData.lastChecked
+    }
+  };
+  
+  return {
+    threatLevel,
+    reasons: allReasons,
+    content: url,
+    threatData
+  };
+}
+
+// Enhanced text analysis with Threat Intelligence
+async function analyzeTextWithThreatIntelligence(text: string, sender?: string): Promise<EnhancedAnalysisResult> {
+  // Get the basic analysis first
+  const basicAnalysis = await analyzeTextForPhishing(text);
+  
+  // Initialize the enhanced result with basic analysis
+  const enhancedResult: EnhancedAnalysisResult = {
+    threatLevel: basicAnalysis.threatLevel,
+    reasons: [...basicAnalysis.reasons],
+    content: text
+  };
+  
+  // Initialize threat data
+  const threatData: ThreatData = {};
+  
+  // Extract URLs for analysis
+  const urlPattern = /https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
+  const urls = text.match(urlPattern);
+  
+  if (urls && urls.length > 0) {
+    // Analyze the first URL found in the text
+    const url = urls[0];
+    const urlThreatData = await threatIntelligence.queryUrl(url);
+    
+    // Add domain information to the threat data
+    threatData.domainInfo = {
+      domain: urlThreatData.domain,
+      reputationScore: urlThreatData.details.reputationScore,
+      malicious: urlThreatData.malicious,
+      suspicious: urlThreatData.suspicious,
+      categories: urlThreatData.details.categories,
+      reportedTimes: urlThreatData.details.reportedTimes,
+      sources: urlThreatData.sources,
+      lastChecked: urlThreatData.lastChecked
+    };
+    
+    // Add reasons from URL analysis
+    if (urlThreatData.malicious) {
+      enhancedResult.reasons.push(`URL contains a domain reported as malicious by ${urlThreatData.sources.join(', ')}`);
+    }
+    
+    if (urlThreatData.suspicious) {
+      enhancedResult.reasons.push(`URL contains a suspicious domain (reputation score: ${urlThreatData.details.reputationScore}/100)`);
+    }
+    
+    // Escalate threat level if necessary
+    if (urlThreatData.malicious) {
+      enhancedResult.threatLevel = 'phishing';
+    } else if (urlThreatData.suspicious && enhancedResult.threatLevel === 'safe') {
+      enhancedResult.threatLevel = 'suspicious';
+    }
+  }
+  
+  // If we have a sender email, analyze it
+  if (sender && sender.includes('@')) {
+    const senderInfo = await threatIntelligence.analyzeEmailSender(sender);
+    
+    // Add sender information to the threat data
+    threatData.senderInfo = {
+      email: senderInfo.email,
+      domain: senderInfo.domain,
+      reputationScore: senderInfo.reputationScore,
+      hasDmarc: senderInfo.hasDmarc,
+      hasSpf: senderInfo.hasSpf,
+      hasDkim: senderInfo.hasDkim,
+      securityLevel: senderInfo.details.securityLevel,
+      creationDate: senderInfo.details.creationDate
+    };
+    
+    // Add reasons from sender analysis
+    if (senderInfo.suspiciousDomain) {
+      enhancedResult.reasons.push('Sender domain has been flagged as suspicious');
+    }
+    
+    if (senderInfo.newDomain) {
+      enhancedResult.reasons.push('Sender domain was recently created (potential phishing indicator)');
+    }
+    
+    if (!senderInfo.hasDmarc && !senderInfo.hasSpf && !senderInfo.hasDkim) {
+      enhancedResult.reasons.push('Sender domain lacks email authentication (no DMARC/SPF/DKIM)');
+    }
+    
+    // Escalate threat level based on sender reputation
+    if (senderInfo.reputationScore < 20) {
+      enhancedResult.threatLevel = 'phishing';
+    } else if (senderInfo.reputationScore < 50 && enhancedResult.threatLevel === 'safe') {
+      enhancedResult.threatLevel = 'suspicious';
+    }
+  }
+  
+  // Add the threat data to the result
+  enhancedResult.threatData = threatData;
+  
+  return enhancedResult;
 }
