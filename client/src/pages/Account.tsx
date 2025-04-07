@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, User, HelpCircle, CreditCard, Lock, LogOut, BrainCircuit } from "lucide-react";
+import { Shield, User, HelpCircle, CreditCard, Lock, LogOut, BrainCircuit, FileText } from "lucide-react";
 import AIAssistant from "@/components/account/ai-assistant";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Link } from "wouter";
 
 export default function Account() {
   const [activeTab, setActiveTab] = useState("account");
@@ -90,10 +91,12 @@ export default function Account() {
                   </li>
                 </ul>
               </div>
-              <Button className="w-full bg-primary-600 hover:bg-primary-700">
-                <CreditCard className="h-4 w-4 mr-2" />
-                Upgrade to Premium
-              </Button>
+              <Link href="/subscription">
+                <Button className="w-full bg-primary-600 hover:bg-primary-700">
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Upgrade to Premium
+                </Button>
+              </Link>
             </CardContent>
           </Card>
           
@@ -118,10 +121,18 @@ export default function Account() {
                 <span className="material-icons text-sm mr-2">contact_support</span>
                 Contact Support
               </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <span className="material-icons text-sm mr-2">privacy_tip</span>
-                Privacy Policy
-              </Button>
+              <Link href="/privacy-policy">
+                <Button variant="outline" className="w-full justify-start">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Privacy Policy
+                </Button>
+              </Link>
+              <Link href="/terms-of-service">
+                <Button variant="outline" className="w-full justify-start">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Terms of Service
+                </Button>
+              </Link>
             </CardContent>
           </Card>
           

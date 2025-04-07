@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -236,10 +236,19 @@ export default function Subscription() {
       
       <div className="mt-8 p-4 bg-gray-50 rounded-lg">
         <h3 className="font-semibold mb-2">Why Upgrade?</h3>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 mb-4">
           Premium subscribers get access to enhanced protection features including social media scanning, 
           priority support, and advanced threat detection for the most comprehensive digital security experience.
         </p>
+        <div className="text-xs text-gray-500 flex justify-center space-x-4">
+          <Link href="/privacy-policy">
+            <a className="hover:text-primary-600 transition-colors">Privacy Policy</a>
+          </Link>
+          <span>•</span>
+          <Link href="/terms-of-service">
+            <a className="hover:text-primary-600 transition-colors">Terms of Service</a>
+          </Link>
+        </div>
       </div>
     </div>
   );

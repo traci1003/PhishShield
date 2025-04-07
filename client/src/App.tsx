@@ -7,6 +7,8 @@ import Dashboard from "@/pages/Dashboard";
 import Scan from "@/pages/Scan";
 import History from "@/pages/History";
 import Account from "@/pages/Account";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import TermsOfService from "@/pages/TermsOfService";
 import AppLayout from "@/components/layout/app-layout";
 import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
@@ -78,6 +80,8 @@ function AppContent({ isCapacitor }: { isCapacitor: boolean }) {
           <Route path="/scan" component={Scan} />
           <Route path="/history" component={History} />
           <Route path="/account" component={Account} />
+          <Route path="/privacy-policy" component={PrivacyPolicy} />
+          <Route path="/terms-of-service" component={TermsOfService} />
           <Route component={NotFound} />
         </Switch>
       </div>
