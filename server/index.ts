@@ -75,6 +75,17 @@ app.use((req, res, next) => {
       on_device_scanning BOOLEAN DEFAULT FALSE NOT NULL
     )`);
     
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS plugin_connections (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      plugin_id TEXT NOT NULL,
+      enabled BOOLEAN DEFAULT FALSE NOT NULL,
+      auth_data JSONB,
+      config_data JSONB,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+    )`);
+    
     // Seed database with initial data
     log("Seeding database with demo data...");
     await storage.seedDatabase();

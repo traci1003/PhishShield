@@ -55,7 +55,7 @@ export class PluginServiceManager {
     userPlugins.forEach(plugin => {
       if (statusMap[plugin.pluginId]) {
         statusMap[plugin.pluginId].connected = true;
-        statusMap[plugin.pluginId].enabled = plugin.isEnabled;
+        statusMap[plugin.pluginId].enabled = plugin.enabled;
       }
     });
     
@@ -69,7 +69,7 @@ export class PluginServiceManager {
     // Check if the user has this plugin enabled
     const pluginConnection = await storage.getPluginConnection(userId, pluginId);
     
-    if (!pluginConnection || !pluginConnection.isEnabled) {
+    if (!pluginConnection || !pluginConnection.enabled) {
       return [];
     }
     
@@ -158,18 +158,14 @@ export class PluginServiceManager {
       pluginConnection = await storage.createPluginConnection({
         userId,
         pluginId,
-        type: this.getPluginType(pluginId),
-        isEnabled: true,
-        isConnected: true,
-        isProtectionEnabled: true,
-        settings: {},
-        authData: {}
+        enabled: true,
+        authData: {},
+        configData: {}
       });
     } else {
       // Update existing connection
       pluginConnection = await storage.updatePluginConnection(userId, pluginId, {
-        isEnabled: true,
-        isProtectionEnabled: true
+        enabled: true
       });
     }
     
@@ -201,8 +197,7 @@ export class PluginServiceManager {
     
     // Update connection to disabled
     await storage.updatePluginConnection(userId, pluginId, {
-      isEnabled: false,
-      isProtectionEnabled: false
+      enabled: false
     });
     
     // Disable monitoring based on plugin type
@@ -231,12 +226,9 @@ export class PluginServiceManager {
       pluginConnection = await storage.createPluginConnection({
         userId,
         pluginId,
-        type: this.getPluginType(pluginId),
-        isEnabled: true,
-        isConnected: true,
-        isProtectionEnabled: true,
+        enabled: true,
         authData: authData,
-        settings: {}
+        configData: {}
       });
     } else {
       // Update existing connection with auth data
@@ -276,12 +268,9 @@ export class PluginServiceManager {
       pluginConnection = await storage.createPluginConnection({
         userId,
         pluginId,
-        type: this.getPluginType(pluginId),
-        isEnabled: true,
-        isConnected: true,
-        isProtectionEnabled: true,
+        enabled: true,
         authData: { manualConfig: configData },
-        settings: {}
+        configData: {}
       });
     } else {
       // Update existing connection with configuration data
@@ -291,8 +280,7 @@ export class PluginServiceManager {
       };
         
       pluginConnection = await storage.updatePluginConnection(userId, pluginId, {
-        isConnected: true,
-        isEnabled: true,
+        enabled: true,
         authData: updatedAuthData
       });
     }

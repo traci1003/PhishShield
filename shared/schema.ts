@@ -206,25 +206,19 @@ export const pluginConnections = pgTable("plugin_connections", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
   pluginId: text("plugin_id").notNull(), // e.g., 'slack', 'email', 'sms'
-  type: text("type").notNull(), // 'sms', 'email', 'social'
-  isConnected: boolean("is_connected").notNull().default(false),
-  isProtectionEnabled: boolean("is_protection_enabled").notNull().default(false),
+  enabled: boolean("enabled").notNull().default(false),
   authData: jsonb("auth_data"), // Store tokens and other auth data
-  settings: jsonb("settings"), // Additional settings for this plugin
-  isEnabled: boolean("is_enabled").notNull().default(false), // Whether the plugin is enabled
+  configData: jsonb("config_data"), // Additional configuration for this plugin
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  lastUpdated: timestamp("last_updated").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const insertPluginConnectionSchema = createInsertSchema(pluginConnections).pick({
   userId: true,
   pluginId: true,
-  type: true,
-  isConnected: true,
-  isProtectionEnabled: true,
-  isEnabled: true,
+  enabled: true,
   authData: true,
-  settings: true,
+  configData: true,
 });
 
 export type InsertPluginConnection = z.infer<typeof insertPluginConnectionSchema>;
