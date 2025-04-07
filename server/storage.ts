@@ -1,7 +1,8 @@
 import { 
   users, type User, type InsertUser,
   messages, type Message, type InsertMessage,
-  protectionSettings, type ProtectionSettings, type InsertProtectionSettings
+  protectionSettings, type ProtectionSettings, type InsertProtectionSettings,
+  deviceTokens, type DeviceToken, type InsertDeviceToken
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc, sql, count } from "drizzle-orm";
@@ -26,6 +27,13 @@ export interface IStorage {
   getProtectionSettings(userId: number): Promise<ProtectionSettings | undefined>;
   createProtectionSettings(settings: InsertProtectionSettings): Promise<ProtectionSettings>;
   updateProtectionSettings(userId: number, updates: Partial<ProtectionSettings>): Promise<ProtectionSettings | undefined>;
+  
+  // Device token operations for push notifications
+  getDeviceToken(token: string): Promise<DeviceToken | undefined>;
+  getDeviceTokensByUser(userId: number): Promise<DeviceToken[]>;
+  createDeviceToken(deviceToken: InsertDeviceToken): Promise<DeviceToken>;
+  updateDeviceToken(token: string, updates: Partial<DeviceToken>): Promise<DeviceToken | undefined>;
+  deleteDeviceToken(token: string): Promise<boolean>;
   
   // Database setup
   seedDatabase(): Promise<void>;
@@ -183,6 +191,73 @@ export class DatabaseStorage implements IStorage {
       .returning();
       
     return updatedSettings;
+  }
+  
+  // Device token methods for push notifications
+  async getDeviceToken(token: string): Promise<DeviceToken | undefined> {
+    const [deviceToken] = await db.select()
+      .from(deviceTokens)
+      .where(eq(deviceTokens.token, token));
+      
+    return deviceToken;
+  }
+  
+  async getDeviceTokensByUser(userId: number): Promise<DeviceToken[]> {
+    return await db.select()
+      .from(deviceTokens)
+      .where(eq(deviceTokens.userId, userId));
+  }
+  
+  async createDeviceToken(deviceToken: InsertDeviceToken): Promise<DeviceToken> {
+    // Check if token already exists
+    const existingToken = await this.getDeviceToken(deviceToken.token);
+    
+    if (existingToken) {
+      // If token exists but for a different user, update it
+      if (existingToken.userId !== deviceToken.userId) {
+        const [updatedToken] = await db.update(deviceTokens)
+          .set({
+            userId: deviceToken.userId,
+            lastActive: new Date()
+          })
+          .where(eq(deviceTokens.token, deviceToken.token))
+          .returning();
+          
+        return updatedToken;
+      }
+      
+      // If token exists for the same user, just update lastActive
+      const [updatedToken] = await db.update(deviceTokens)
+        .set({ lastActive: new Date() })
+        .where(eq(deviceTokens.token, deviceToken.token))
+        .returning();
+        
+      return updatedToken;
+    }
+    
+    // Create new token
+    const [newToken] = await db.insert(deviceTokens)
+      .values(deviceToken)
+      .returning();
+      
+    return newToken;
+  }
+  
+  async updateDeviceToken(token: string, updates: Partial<DeviceToken>): Promise<DeviceToken | undefined> {
+    const [updatedToken] = await db.update(deviceTokens)
+      .set(updates)
+      .where(eq(deviceTokens.token, token))
+      .returning();
+      
+    return updatedToken;
+  }
+  
+  async deleteDeviceToken(token: string): Promise<boolean> {
+    const result = await db.delete(deviceTokens)
+      .where(eq(deviceTokens.token, token))
+      .returning();
+      
+    return result.length > 0;
   }
   
   // Seed the database with demo data

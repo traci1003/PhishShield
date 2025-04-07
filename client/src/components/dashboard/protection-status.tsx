@@ -86,6 +86,29 @@ export default function ProtectionStatus() {
             color="fuchsia"
           />
           
+          <ProtectionItem
+            icon="notifications"
+            title="Push Notifications"
+            description="Real-time phishing alerts"
+            enabled={true} 
+            onChange={(value) => {
+              // In a real app, this would toggle notifications
+              // For now we'll just show a toast
+              if (!value) {
+                toast({
+                  title: "Notifications disabled",
+                  description: "You won't receive real-time phishing alerts."
+                });
+              } else {
+                toast({
+                  title: "Notifications enabled",
+                  description: "You'll receive real-time phishing alerts."
+                });
+              }
+            }}
+            color="rose"
+          />
+          
           <div className="p-4 flex items-center justify-between">
             <div className="flex items-center">
               <span className="material-icons text-primary-600 mr-3">privacy_tip</span>

@@ -10,6 +10,7 @@ import Account from "@/pages/Account";
 import AppLayout from "@/components/layout/app-layout";
 import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
+import { notificationService } from "./lib/notification-service";
 
 function App() {
   const [isCapacitor, setIsCapacitor] = useState(false);
@@ -35,6 +36,18 @@ function App() {
         // App brought back to foreground
         console.log('App resumed');
       });
+      
+      // Initialize push notifications
+      const initNotifications = async () => {
+        try {
+          const initialized = await notificationService.initialize();
+          console.log(`Push notifications ${initialized ? 'initialized' : 'not available'}`);
+        } catch (error) {
+          console.error('Error initializing push notifications:', error);
+        }
+      };
+      
+      initNotifications();
     }
     
     // Prevent pull-to-refresh on mobile

@@ -3,11 +3,13 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 // Import NLP and URL analyzer functions directly from the file
 import { aiAssistant } from "./ai-service";
+import { notificationService } from "./notification-service";
 import { 
   scanTextSchema, 
   scanUrlSchema, 
   insertMessageSchema,
-  chatMessageSchema
+  chatMessageSchema,
+  deviceTokenSchema
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -91,6 +93,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         source: data.source
       });
+      
+      // If phishing or suspicious, send push notification
+      if (analysisResult.threatLevel === 'phishing' || analysisResult.threatLevel === 'suspicious') {
+        // Get user's protection settings to check if notifications are enabled
+        const settings = await storage.getProtectionSettings(userId);
+        
+        if (settings) {
+          // Only send notifications if the relevant protection is enabled
+          const shouldNotify = 
+            (data.source === 'sms' && settings.smsProtection) ||
+            (data.source === 'email' && settings.emailProtection) ||
+            (data.source === 'social' && settings.socialMediaProtection) ||
+            (data.source === 'manual'); // Always notify for manual scans
+          
+          if (shouldNotify) {
+            // Send notification asynchronously - don't wait for it to complete
+            notificationService.sendPhishingAlert(userId, message)
+              .then(success => {
+                if (success) {
+                  console.log(`Push notification sent for message ${message.id}`);
+                } else {
+                  console.log(`Failed to send push notification for message ${message.id}`);
+                }
+              })
+              .catch(error => {
+                console.error(`Error sending push notification: ${error}`);
+              });
+          }
+        }
+      }
       
       // Return the analysis result and the created message
       res.json({
@@ -179,6 +211,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("AI Assistant error:", error);
       res.status(500).json({ message: "Error processing your question" });
+    }
+  });
+  
+  // Device token registration for push notifications
+  apiRouter.post("/device-tokens", async (req: Request, res: Response) => {
+    try {
+      // Validate the request data
+      const data = deviceTokenSchema.parse(req.body);
+      
+      // In a real app, we'd get the userId from authentication
+      const userId = 1; // Demo user ID
+      
+      // Create or update device token
+      const deviceToken = await storage.createDeviceToken({
+        userId,
+        token: data.token,
+        platform: data.platform
+      });
+      
+      res.json({ success: true, deviceToken });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      console.error("Device token registration error:", error);
+      res.status(500).json({ message: "Error registering device token" });
+    }
+  });
+  
+  // Delete device token (for when user logs out or uninstalls app)
+  apiRouter.delete("/device-tokens/:token", async (req: Request, res: Response) => {
+    try {
+      const token = req.params.token;
+      
+      const success = await storage.deleteDeviceToken(token);
+      if (!success) {
+        return res.status(404).json({ message: "Device token not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Device token deletion error:", error);
+      res.status(500).json({ message: "Error deleting device token" });
     }
   });
 

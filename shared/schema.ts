@@ -9,6 +9,16 @@ export const PERPLEXITY_MODELS = {
   HUGE: "llama-3.1-sonar-huge-128k-online"
 };
 
+// Device token schema for push notifications
+export const deviceTokens = pgTable("device_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  token: text("token").notNull().unique(),
+  platform: text("platform").notNull(), // "ios", "android"
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  lastActive: timestamp("last_active").notNull().defaultNow(),
+});
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -103,3 +113,21 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
 }
+
+// Schema for device tokens
+export const insertDeviceTokenSchema = createInsertSchema(deviceTokens).pick({
+  userId: true,
+  token: true,
+  platform: true,
+});
+
+export type InsertDeviceToken = z.infer<typeof insertDeviceTokenSchema>;
+export type DeviceToken = typeof deviceTokens.$inferSelect;
+
+// Schema for device token registration
+export const deviceTokenSchema = z.object({
+  token: z.string().min(1, "Device token is required"),
+  platform: z.enum(["ios", "android"]),
+});
+
+export type DeviceTokenRequest = z.infer<typeof deviceTokenSchema>;
