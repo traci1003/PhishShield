@@ -7,6 +7,7 @@ import { notificationService } from "./notification-service";
 import { stripeService } from "./stripe-service";
 import { emailService } from "./email-service";
 import { threatIntelligence } from "./threat-intelligence";
+import { pluginServiceManager } from "./plugin-services/plugin-service-manager";
 import { 
   scanTextSchema, 
   scanUrlSchema, 
@@ -17,7 +18,8 @@ import {
   enhancedScanTextSchema,
   enhancedScanUrlSchema,
   EnhancedAnalysisResult,
-  ThreatData
+  ThreatData,
+  PLUGIN_TYPES
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -417,6 +419,178 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Webhook error:", error);
       res.status(400).end();
+    }
+  });
+
+  // Plugin API endpoints
+  
+  // Get all available plugins and their status
+  apiRouter.get("/plugins", async (req: Request, res: Response) => {
+    try {
+      // In a real app, we'd get the userId from authentication
+      const userId = 1; // Demo user ID
+      
+      // Get plugin status
+      const pluginStatus = await pluginServiceManager.getPluginStatus(userId);
+      
+      res.json(pluginStatus);
+    } catch (error) {
+      console.error("Error getting plugin status:", error);
+      res.status(500).json({ message: "Error retrieving plugin status" });
+    }
+  });
+  
+  // Get messages from a specific plugin
+  apiRouter.get("/plugins/:pluginId/messages", async (req: Request, res: Response) => {
+    try {
+      // In a real app, we'd get the userId from authentication
+      const userId = 1; // Demo user ID
+      
+      const { pluginId } = req.params;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      
+      // Check if this plugin is available for the user's plan
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check if this is a premium plugin and user has premium or better
+      if (pluginId === PLUGIN_TYPES.SLACK && user.plan === 'basic') {
+        return res.status(403).json({ message: "Upgrade to Premium to access social media protection" });
+      }
+      
+      // Get messages from plugin
+      const messages = await pluginServiceManager.fetchPluginMessages(userId, pluginId, limit);
+      
+      res.json(messages);
+    } catch (error) {
+      console.error(`Error fetching messages from plugin ${req.params.pluginId}:`, error);
+      res.status(500).json({ message: "Error fetching messages from plugin" });
+    }
+  });
+  
+  // Enable a plugin
+  apiRouter.post("/plugins/:pluginId/enable", async (req: Request, res: Response) => {
+    try {
+      // In a real app, we'd get the userId from authentication
+      const userId = 1; // Demo user ID
+      
+      const { pluginId } = req.params;
+      
+      // Check if this plugin is available for the user's plan
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check if this is a premium plugin and user has premium or better
+      if (pluginId === PLUGIN_TYPES.SLACK && user.plan === 'basic') {
+        return res.status(403).json({ message: "Upgrade to Premium to access social media protection" });
+      }
+      
+      // Enable the plugin
+      const success = await pluginServiceManager.enablePlugin(userId, pluginId);
+      
+      if (success) {
+        const updatedStatus = await pluginServiceManager.getPluginStatus(userId);
+        res.json({ success: true, plugins: updatedStatus });
+      } else {
+        res.status(400).json({ message: "Failed to enable plugin" });
+      }
+    } catch (error) {
+      console.error(`Error enabling plugin ${req.params.pluginId}:`, error);
+      res.status(500).json({ message: "Error enabling plugin" });
+    }
+  });
+  
+  // Disable a plugin
+  apiRouter.post("/plugins/:pluginId/disable", async (req: Request, res: Response) => {
+    try {
+      // In a real app, we'd get the userId from authentication
+      const userId = 1; // Demo user ID
+      
+      const { pluginId } = req.params;
+      
+      // Disable the plugin
+      const success = await pluginServiceManager.disablePlugin(userId, pluginId);
+      
+      if (success) {
+        const updatedStatus = await pluginServiceManager.getPluginStatus(userId);
+        res.json({ success: true, plugins: updatedStatus });
+      } else {
+        res.status(400).json({ message: "Failed to disable plugin" });
+      }
+    } catch (error) {
+      console.error(`Error disabling plugin ${req.params.pluginId}:`, error);
+      res.status(500).json({ message: "Error disabling plugin" });
+    }
+  });
+  
+  // Set authentication data for a plugin
+  apiRouter.post("/plugins/:pluginId/auth", async (req: Request, res: Response) => {
+    try {
+      // In a real app, we'd get the userId from authentication
+      const userId = 1; // Demo user ID
+      
+      const { pluginId } = req.params;
+      const authData = req.body;
+      
+      if (!authData) {
+        return res.status(400).json({ message: "Authentication data is required" });
+      }
+      
+      // Set auth data for the plugin
+      const success = await pluginServiceManager.setPluginAuth(userId, pluginId, authData);
+      
+      if (success) {
+        const updatedStatus = await pluginServiceManager.getPluginStatus(userId);
+        res.json({ success: true, plugins: updatedStatus });
+      } else {
+        res.status(400).json({ message: "Failed to set plugin authentication" });
+      }
+    } catch (error) {
+      console.error(`Error setting auth for plugin ${req.params.pluginId}:`, error);
+      res.status(500).json({ message: "Error setting plugin authentication" });
+    }
+  });
+  
+  // Configure a plugin with manual settings (alternative to API keys)
+  apiRouter.post("/plugins/:pluginId/configure", async (req: Request, res: Response) => {
+    try {
+      // In a real app, we'd get the userId from authentication
+      const userId = 1; // Demo user ID
+      
+      const { pluginId } = req.params;
+      const configData = req.body;
+      
+      if (!configData) {
+        return res.status(400).json({ message: "Configuration data is required" });
+      }
+      
+      // Use the plugin service manager to configure the plugin
+      const success = await pluginServiceManager.configurePlugin(userId, pluginId, configData);
+      
+      if (!success) {
+        return res.status(400).json({ message: "Failed to configure plugin" });
+      }
+      
+      // Get the updated plugin connection
+      const pluginConnection = await storage.getPluginConnection(userId, pluginId);
+      
+      // Get updated plugin status
+      const updatedStatus = await pluginServiceManager.getPluginStatus(userId);
+      
+      res.json({ 
+        success: true, 
+        pluginConnection,
+        plugins: updatedStatus 
+      });
+    } catch (error) {
+      console.error("Error configuring plugin:", error);
+      res.status(500).json({ message: "Error configuring plugin" });
     }
   });
 

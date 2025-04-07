@@ -9,6 +9,14 @@ export const PERPLEXITY_MODELS = {
   HUGE: "llama-3.1-sonar-huge-128k-online"
 };
 
+// Plugin types
+export const PLUGIN_TYPES = {
+  SMS: "sms",
+  EMAIL: "email",
+  SOCIAL: "social",
+  SLACK: "slack"
+} as const;
+
 // Device token schema for push notifications
 export const deviceTokens = pgTable("device_tokens", {
   id: serial("id").primaryKey(),
@@ -192,3 +200,58 @@ export const enhancedScanUrlSchema = scanUrlSchema.extend({
 });
 
 export type EnhancedScanUrlRequest = z.infer<typeof enhancedScanUrlSchema>;
+
+// Plugin connection schemas
+export const pluginConnections = pgTable("plugin_connections", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  pluginId: text("plugin_id").notNull(), // e.g., 'slack', 'email', 'sms'
+  type: text("type").notNull(), // 'sms', 'email', 'social'
+  isConnected: boolean("is_connected").notNull().default(false),
+  isProtectionEnabled: boolean("is_protection_enabled").notNull().default(false),
+  authData: jsonb("auth_data"), // Store tokens and other auth data
+  settings: jsonb("settings"), // Additional settings for this plugin
+  isEnabled: boolean("is_enabled").notNull().default(false), // Whether the plugin is enabled
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  lastUpdated: timestamp("last_updated").notNull().defaultNow(),
+});
+
+export const insertPluginConnectionSchema = createInsertSchema(pluginConnections).pick({
+  userId: true,
+  pluginId: true,
+  type: true,
+  isConnected: true,
+  isProtectionEnabled: true,
+  isEnabled: true,
+  authData: true,
+  settings: true,
+});
+
+export type InsertPluginConnection = z.infer<typeof insertPluginConnectionSchema>;
+export type PluginConnection = typeof pluginConnections.$inferSelect;
+
+// Plugin message schemas
+export interface PluginMessage {
+  externalId: string;
+  content: string;
+  sender: {
+    id?: string;
+    name: string;
+    handle?: string;
+  };
+  timestamp: string;
+  metadata?: Record<string, any>;
+  urls?: string[];
+}
+
+// Plugin status schemas
+export const pluginStatusSchema = z.object({
+  connected: z.boolean(),
+  enabled: z.boolean(),
+  available: z.boolean(),
+  requiresAuth: z.boolean(),
+  authUrl: z.string().optional(),
+  userId: z.number().optional(),
+});
+
+export type PluginStatus = z.infer<typeof pluginStatusSchema>;

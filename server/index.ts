@@ -103,25 +103,64 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  // Get port from environment or use 5000 as default
+  const port = process.env.PORT ? parseInt(process.env.PORT) : 5000;
+  
+  // Add a health check endpoint that will be used to verify the server is running
+  app.get('/healthz', (req, res) => {
+    res.status(200).send('OK');
+  });
+  
   console.log(`Attempting to listen on port ${port}...`);
+  
+  // Start the server
   try {
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
+    // Create server without options first
+    const serverInstance = server.listen(port, "0.0.0.0", () => {
+      // Very explicit logging to ensure port detection
+      console.log(`Server is running on port ${port}`);
+      console.log(`PORT_OPENED=${port}`);
       log(`Server successfully started and serving on port ${port}`);
+      
       // Print out the URL for easier access
       console.log(`Server URL: http://localhost:${port}`);
+      
+      // Signal that the server is ready
+      if (process.send) {
+        process.send('ready');
+      }
     });
-    server.on('error', (error) => {
+    
+    // More robust error handling
+    serverInstance.on('error', (error: any) => {
       console.error('Server error:', error);
+      if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${port} is already in use. Try using a different port.`);
+        process.exit(1);
+      }
     });
+    
+    // Add graceful shutdown handling
+    const shutdown = () => {
+      log('Shutdown signal received, closing server gracefully');
+      serverInstance.close(() => {
+        log('Server closed');
+        process.exit(0);
+      });
+      
+      // Force close after 10 seconds if graceful shutdown fails
+      setTimeout(() => {
+        log('Forcing server shutdown after timeout');
+        process.exit(1);
+      }, 10000);
+    };
+    
+    // Handle various shutdown signals
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
+    process.on('SIGHUP', shutdown);
   } catch (error) {
     console.error('Error starting server:', error);
+    process.exit(1);
   }
 })();

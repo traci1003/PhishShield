@@ -7,6 +7,7 @@ import Dashboard from "@/pages/Dashboard";
 import Scan from "@/pages/Scan";
 import History from "@/pages/History";
 import Account from "@/pages/Account";
+import Settings from "@/pages/Settings";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import FAQ from "@/pages/FAQ";
@@ -18,6 +19,7 @@ import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { notificationService } from "./lib/notification-service";
 import { AccessibilityProvider } from "@/contexts/accessibility-context";
+import { PluginProvider } from "@/contexts/plugin-context";
 import Subscription from "@/pages/Subscription";
 
 // SVG Filters for color blindness simulations and enhanced accessibility
@@ -143,11 +145,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AccessibilityProvider>
-        <div className={isCapacitor ? 'capacitor-environment' : ''}>
-          <AccessibilityFilters />
-          <AppContent isCapacitor={isCapacitor} />
-        </div>
-        <Toaster />
+        <PluginProvider>
+          <div className={isCapacitor ? 'capacitor-environment' : ''}>
+            <AccessibilityFilters />
+            <AppContent isCapacitor={isCapacitor} />
+          </div>
+          <Toaster />
+        </PluginProvider>
       </AccessibilityProvider>
     </QueryClientProvider>
   );
@@ -167,6 +171,7 @@ function AppContent({ isCapacitor }: { isCapacitor: boolean }) {
           <Route path="/scan" component={Scan} />
           <Route path="/history" component={History} />
           <Route path="/account" component={Account} />
+          <Route path="/settings" component={Settings} />
           <Route path="/subscription" component={Subscription} />
           <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/terms-of-service" component={TermsOfService} />

@@ -2,7 +2,8 @@ import {
   users, type User, type InsertUser,
   messages, type Message, type InsertMessage,
   protectionSettings, type ProtectionSettings, type InsertProtectionSettings,
-  deviceTokens, type DeviceToken, type InsertDeviceToken
+  deviceTokens, type DeviceToken, type InsertDeviceToken,
+  pluginConnections, type PluginConnection, type InsertPluginConnection
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc, sql, count } from "drizzle-orm";
@@ -36,6 +37,13 @@ export interface IStorage {
   createDeviceToken(deviceToken: InsertDeviceToken): Promise<DeviceToken>;
   updateDeviceToken(token: string, updates: Partial<DeviceToken>): Promise<DeviceToken | undefined>;
   deleteDeviceToken(token: string): Promise<boolean>;
+  
+  // Plugin connection operations
+  getPluginConnection(userId: number, pluginId: string): Promise<PluginConnection | undefined>;
+  getPluginConnectionsByUser(userId: number, type?: string): Promise<PluginConnection[]>;
+  createPluginConnection(connection: InsertPluginConnection): Promise<PluginConnection>;
+  updatePluginConnection(userId: number, pluginId: string, updates: Partial<PluginConnection>): Promise<PluginConnection | undefined>;
+  deletePluginConnection(userId: number, pluginId: string): Promise<boolean>;
   
   // Database setup
   seedDatabase(): Promise<void>;
@@ -272,6 +280,85 @@ export class DatabaseStorage implements IStorage {
   async deleteDeviceToken(token: string): Promise<boolean> {
     const result = await db.delete(deviceTokens)
       .where(eq(deviceTokens.token, token))
+      .returning();
+      
+    return result.length > 0;
+  }
+  
+  // Plugin connection methods
+  async getPluginConnection(userId: number, pluginId: string): Promise<PluginConnection | undefined> {
+    const [connection] = await db.select()
+      .from(pluginConnections)
+      .where(sql`${pluginConnections.userId} = ${userId} AND ${pluginConnections.pluginId} = ${pluginId}`);
+      
+    return connection;
+  }
+  
+  async getPluginConnectionsByUser(userId: number, type?: string): Promise<PluginConnection[]> {
+    if (type) {
+      // If type is provided, filter by type
+      return await db
+        .select()
+        .from(pluginConnections)
+        .where(sql`${pluginConnections.userId} = ${userId} AND ${pluginConnections.type} = ${type}`);
+    } else {
+      // Otherwise just filter by userId
+      return await db
+        .select()
+        .from(pluginConnections)
+        .where(sql`${pluginConnections.userId} = ${userId}`);
+    }
+  }
+  
+  async createPluginConnection(connection: InsertPluginConnection): Promise<PluginConnection> {
+    // Make sure userId is a number (not null)
+    const userId = connection.userId || 0;
+    
+    // Check if connection already exists
+    const existingConnection = await this.getPluginConnection(userId, connection.pluginId);
+    
+    if (existingConnection) {
+      // If connection exists, update it
+      const [updatedConnection] = await db.update(pluginConnections)
+        .set({
+          isConnected: connection.isConnected,
+          isProtectionEnabled: connection.isProtectionEnabled,
+          authData: connection.authData,
+          lastUpdated: new Date()
+        })
+        .where(sql`${pluginConnections.userId} = ${userId} AND ${pluginConnections.pluginId} = ${connection.pluginId}`)
+        .returning();
+        
+      return updatedConnection;
+    }
+    
+    // Create new connection
+    const [newConnection] = await db.insert(pluginConnections)
+      .values({
+        ...connection,
+        userId,
+        lastUpdated: new Date()
+      })
+      .returning();
+      
+    return newConnection;
+  }
+  
+  async updatePluginConnection(userId: number, pluginId: string, updates: Partial<PluginConnection>): Promise<PluginConnection | undefined> {
+    const [updatedConnection] = await db.update(pluginConnections)
+      .set({
+        ...updates,
+        lastUpdated: new Date()
+      })
+      .where(sql`${pluginConnections.userId} = ${userId} AND ${pluginConnections.pluginId} = ${pluginId}`)
+      .returning();
+      
+    return updatedConnection;
+  }
+  
+  async deletePluginConnection(userId: number, pluginId: string): Promise<boolean> {
+    const result = await db.delete(pluginConnections)
+      .where(sql`${pluginConnections.userId} = ${userId} AND ${pluginConnections.pluginId} = ${pluginId}`)
       .returning();
       
     return result.length > 0;

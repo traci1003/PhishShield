@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Search, History, User } from "lucide-react";
+import { LayoutDashboard, Search, History, User, Settings } from "lucide-react";
 
 export default function BottomNavigation() {
   const [location] = useLocation();
@@ -38,6 +38,13 @@ export default function BottomNavigation() {
             active={isActive('/account')}
             color="rose"
           />
+          <NavItem 
+            to="/settings" 
+            Icon={Settings}
+            label="Settings" 
+            active={isActive('/settings')}
+            color="emerald"
+          />
         </div>
       </div>
     </nav>
@@ -49,7 +56,7 @@ interface NavItemProps {
   Icon: React.ElementType;
   label: string;
   active: boolean;
-  color: 'indigo' | 'purple' | 'fuchsia' | 'rose';
+  color: 'indigo' | 'purple' | 'fuchsia' | 'rose' | 'emerald';
 }
 
 function NavItem({ to, Icon, label, active, color }: NavItemProps) {
@@ -58,6 +65,7 @@ function NavItem({ to, Icon, label, active, color }: NavItemProps) {
     purple: "from-purple-500 to-indigo-600",
     fuchsia: "from-fuchsia-500 to-purple-600",
     rose: "from-rose-500 to-fuchsia-600",
+    emerald: "from-emerald-500 to-teal-600",
   };
   
   const iconColors = {
@@ -65,6 +73,7 @@ function NavItem({ to, Icon, label, active, color }: NavItemProps) {
     purple: "text-purple-600",
     fuchsia: "text-fuchsia-600",
     rose: "text-rose-600",
+    emerald: "text-emerald-600",
   };
   
   return (

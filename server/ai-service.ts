@@ -1,5 +1,10 @@
 import { PERPLEXITY_MODELS } from '@shared/schema';
 import { log } from './vite';
+import fetch from 'node-fetch';
+
+// Check for Perplexity API key
+const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
+const USE_PERPLEXITY_API = !!PERPLEXITY_API_KEY;
 
 // System prompt for the AI assistant
 const PHISHSHIELD_SYSTEM_PROMPT = `You are PhishShield AI's customer service assistant. Help users understand phishing threats, how to stay safe online, and how to use the PhishShield app. 
@@ -19,7 +24,7 @@ When answering:
 
 Important: The app is available on iOS, Android, and Web.`;
 
-// Mock responses for common questions
+// Mock responses for common questions (fallback if API is unavailable)
 const MOCK_RESPONSES: Record<string, string> = {
   default: "I'm PhishShield AI's virtual assistant. I can help with questions about phishing protection, online safety, and using our app. What would you like to know?",
   hello: "Hello! I'm here to help with any questions about PhishShield AI or online security. How can I assist you today?",
@@ -31,15 +36,50 @@ const MOCK_RESPONSES: Record<string, string> = {
   "how it works": "PhishShield AI uses machine learning and threat intelligence to analyze messages and links. It checks for suspicious patterns, domain reputation, and known threats. When a potential threat is detected, you'll receive an alert with explanation of the risk.",
 };
 
+// Interface for Perplexity API response
+interface PerplexityResponse {
+  id: string;
+  model: string;
+  object: string;
+  created: number;
+  citations?: string[];
+  choices: {
+    index: number;
+    finish_reason: string;
+    message: {
+      role: string;
+      content: string;
+    };
+    delta?: {
+      role: string;
+      content: string;
+    };
+  }[];
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
 /**
- * AI Assistant class for handling customer service inquiries (console-based implementation)
+ * AI Assistant class for handling customer service inquiries
  */
 export class AIAssistant {
   private model: string;
+  private apiKey: string | undefined;
+  private useApi: boolean;
 
   constructor(model: string = PERPLEXITY_MODELS.SMALL) {
     this.model = model;
-    log('Using console-based AI Assistant - no API key required', 'ai-service');
+    this.apiKey = PERPLEXITY_API_KEY;
+    this.useApi = USE_PERPLEXITY_API;
+    
+    if (this.useApi) {
+      log('Using Perplexity API for AI Assistant', 'ai-service');
+    } else {
+      log('Using console-based AI Assistant - no API key available', 'ai-service');
+    }
   }
 
   /**
@@ -51,8 +91,15 @@ export class AIAssistant {
       console.log(`User Query: ${query}`);
       console.log('==============================\n');
       
-      // Generate a mock response based on the query keywords
-      const response = this.generateMockResponse(query);
+      let response: string;
+      
+      if (this.useApi) {
+        // Use the Perplexity API
+        response = await this.getPerplexityResponse(query);
+      } else {
+        // Fall back to mock responses
+        response = this.generateMockResponse(query);
+      }
       
       console.log('\n========== AI RESPONSE ==========');
       console.log(response);
@@ -66,7 +113,51 @@ export class AIAssistant {
   }
 
   /**
-   * Generate a mock response based on keywords in the query
+   * Get response from Perplexity API
+   */
+  private async getPerplexityResponse(query: string): Promise<string> {
+    try {
+      const response = await fetch('https://api.perplexity.ai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages: [
+            {
+              role: 'system',
+              content: PHISHSHIELD_SYSTEM_PROMPT
+            },
+            {
+              role: 'user',
+              content: query
+            }
+          ],
+          temperature: 0.2,
+          top_p: 0.9,
+          max_tokens: 150,
+          frequency_penalty: 1
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        log(`Perplexity API error: ${response.status} ${errorText}`, 'ai-service');
+        return this.generateMockResponse(query); // Fall back to mock response
+      }
+
+      const data = await response.json() as PerplexityResponse;
+      return data.choices[0].message.content;
+    } catch (error) {
+      log(`Error calling Perplexity API: ${error}`, 'ai-service');
+      return this.generateMockResponse(query); // Fall back to mock response
+    }
+  }
+
+  /**
+   * Generate a mock response based on keywords in the query (fallback)
    */
   private generateMockResponse(query: string): string {
     const normalizedQuery = query.toLowerCase();
