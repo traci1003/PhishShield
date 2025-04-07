@@ -111,7 +111,7 @@ export const HighContrastMessage: React.FC<MessageProps> = ({
         {showFullDetails && (
           <div className={`mt-4 p-3 rounded-md ${highContrast ? 'bg-black text-white' : 'bg-gray-100'}`}>
             <h4 className={`font-semibold mb-2 ${highContrast ? 'text-white' : 'text-gray-800'}`}>
-              Why this is flagged as {message.threatLevel}:
+              PhishShield.AI.com Analysis:
             </h4>
             <ul className="list-disc pl-5 space-y-1">
               {message.threatDetails.reasons.map((reason, index) => (
@@ -120,6 +120,9 @@ export const HighContrastMessage: React.FC<MessageProps> = ({
                 </li>
               ))}
             </ul>
+            <div className={`mt-3 pt-2 border-t ${highContrast ? 'border-gray-700 text-gray-300' : 'border-gray-200 text-gray-500'} text-xs`}>
+              Protected by PhishShield.AI.com | Advanced Threat Analysis
+            </div>
           </div>
         )}
         

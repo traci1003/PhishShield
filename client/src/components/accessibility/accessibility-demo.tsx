@@ -10,7 +10,7 @@ export const AccessibilityDemoMessages = () => {
   const demoMessages = [
     {
       id: 1,
-      content: "Hello, this is a normal message from your friend. Let's meet up tomorrow for coffee!",
+      content: "Hello, this is a normal message from your friend. Let's meet up tomorrow for coffee! [Verified safe by PhishShield.AI.com]",
       sender: "Friend",
       threatLevel: "safe",
       threatDetails: {
@@ -20,7 +20,7 @@ export const AccessibilityDemoMessages = () => {
     },
     {
       id: 2,
-      content: "You've won a $500 Amazon gift card! Click here to claim: https://amaz0n-gift.scam/claim",
+      content: "You've won a $500 Amazon gift card! Click here to claim: https://amaz0n-gift.scam/claim [Detected by PhishShield.AI.com]",
       sender: "Unknown",
       threatLevel: "phishing",
       threatDetails: {
@@ -34,7 +34,7 @@ export const AccessibilityDemoMessages = () => {
     },
     {
       id: 3,
-      content: "Your account will be deactivated in 24 hours. Verify your details at http://secure-bank.info/verify",
+      content: "Your account will be deactivated in 24 hours. Verify your details at http://secure-bank.info/verify [Flagged by PhishShield.AI.com]",
       sender: "Security Team",
       threatLevel: "suspicious",
       threatDetails: {

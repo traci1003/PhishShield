@@ -119,11 +119,28 @@ export const ThreatLegend: React.FC = () => {
   
   return (
     <div className={`p-3 rounded-lg ${highContrast ? 'bg-black border-white border-2' : 'bg-white shadow-sm'} flex flex-col gap-3`}>
-      <h3 className={`text-lg font-semibold ${highContrast ? 'text-white' : 'text-gray-800'}`}>Threat Legend</h3>
+      <h3 className={`text-lg font-semibold ${highContrast ? 'text-white' : 'text-gray-800'}`}>
+        PhishShield.AI.com Threat Legend
+      </h3>
       <div className="flex flex-col gap-2">
-        <HighContrastThreatVisualization threatLevel="safe" />
-        <HighContrastThreatVisualization threatLevel="suspicious" />
-        <HighContrastThreatVisualization threatLevel="phishing" />
+        <div className="flex items-center justify-between">
+          <HighContrastThreatVisualization threatLevel="safe" />
+          <span className={`text-sm ${highContrast ? 'text-white' : 'text-gray-600'}`}>
+            Verified by PhishShield.AI.com
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <HighContrastThreatVisualization threatLevel="suspicious" />
+          <span className={`text-sm ${highContrast ? 'text-white' : 'text-gray-600'}`}>
+            Flagged by PhishShield.AI.com
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <HighContrastThreatVisualization threatLevel="phishing" />
+          <span className={`text-sm ${highContrast ? 'text-white' : 'text-gray-600'}`}>
+            Detected by PhishShield.AI.com
+          </span>
+        </div>
       </div>
     </div>
   );

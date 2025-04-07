@@ -15,7 +15,7 @@ export default function Account() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Account</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">PhishShield.AI.com Account</h1>
         <p className="text-gray-600">
           Manage your account, subscription, and get help
         </p>
@@ -64,7 +64,7 @@ export default function Account() {
               <div className="bg-primary-50 rounded-lg p-4 mb-4">
                 <h3 className="font-semibold text-primary-700 flex items-center mb-2">
                   <Shield className="h-5 w-5 mr-2" />
-                  PhishShield Free
+                  PhishShield.AI.com Free
                 </h3>
                 <ul className="text-sm space-y-2">
                   <li className="flex items-center">
