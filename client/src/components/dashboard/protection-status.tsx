@@ -5,8 +5,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+interface ProtectionSettings {
+  smsProtection: boolean;
+  emailProtection: boolean;
+  socialMediaProtection: boolean;
+  id?: number;
+  userId?: number;
+}
+
 export default function ProtectionStatus() {
-  const { data: settings, isLoading } = useQuery({
+  const { data: settings, isLoading } = useQuery<ProtectionSettings>({
     queryKey: ['/api/protection-settings'],
   });
 
@@ -56,6 +64,7 @@ export default function ProtectionStatus() {
             description="Scanning incoming messages"
             enabled={settings?.smsProtection}
             onChange={(value) => handleToggleProtection('smsProtection', value)}
+            color="indigo"
           />
           
           <ProtectionItem 
@@ -64,6 +73,7 @@ export default function ProtectionStatus() {
             description="Scanning messages and links"
             enabled={settings?.emailProtection}
             onChange={(value) => handleToggleProtection('emailProtection', value)}
+            color="purple"
           />
           
           <ProtectionItem 
@@ -73,6 +83,7 @@ export default function ProtectionStatus() {
             enabled={settings?.socialMediaProtection}
             onChange={(value) => handleToggleProtection('socialMediaProtection', value)}
             disabled={true}
+            color="fuchsia"
           />
           
           <div className="p-4 flex items-center justify-between">
@@ -100,31 +111,75 @@ interface ProtectionItemProps {
   enabled?: boolean;
   onChange: (value: boolean) => void;
   disabled?: boolean;
+  color?: 'indigo' | 'purple' | 'fuchsia' | 'rose';
 }
 
-function ProtectionItem({ 
-  icon, 
-  title, 
-  description, 
-  enabled = false, 
+function ProtectionItem({
+  icon,
+  title,
+  description,
+  enabled = false,
   onChange,
-  disabled = false
+  disabled = false,
+  color = 'indigo'
 }: ProtectionItemProps) {
+  const bgColors = {
+    indigo: "bg-indigo-100",
+    purple: "bg-purple-100",
+    fuchsia: "bg-fuchsia-100",
+    rose: "bg-rose-100"
+  };
+  
+  const textColors = {
+    indigo: "text-indigo-600",
+    purple: "text-purple-600",
+    fuchsia: "text-fuchsia-600",
+    rose: "text-rose-600"
+  };
+  
+  const borderColors = {
+    indigo: "border-indigo-200",
+    purple: "border-purple-200",
+    fuchsia: "border-fuchsia-200",
+    rose: "border-rose-200"
+  };
+  
+  const rippleAnimation = enabled && !disabled ? 'animate-ripple' : '';
+  
   return (
-    <div className="p-4 flex items-center justify-between">
+    <div className={`p-4 flex items-center justify-between transition-all duration-300 ${enabled && !disabled ? 'bg-gray-50' : ''} hover:bg-gray-50`}>
       <div className="flex items-center">
-        <span className="material-icons text-primary-600 mr-3">{icon}</span>
+        <div className={`rounded-full ${bgColors[color]} p-2 mr-3 relative`}>
+          <span className={`material-icons ${textColors[color]}`}>{icon}</span>
+          {enabled && !disabled && (
+            <span className={`absolute inset-0 rounded-full ${bgColors[color]} ${rippleAnimation}`}></span>
+          )}
+        </div>
         <div>
-          <h3 className="font-medium text-gray-900">{title}</h3>
+          <h3 className="font-medium text-gray-900 flex items-center">
+            {title}
+            {enabled && !disabled && (
+              <span className={`ml-2 text-xs ${textColors[color]} bg-white px-1.5 py-0.5 rounded-full border ${borderColors[color]}`}>
+                Active
+              </span>
+            )}
+          </h3>
           <p className="text-xs text-gray-500">{description}</p>
         </div>
       </div>
-      <Switch 
-        checked={enabled} 
-        onCheckedChange={onChange}
-        disabled={disabled}
-        className={disabled ? "opacity-50" : ""}
-      />
+      <div className="flex items-center">
+        {disabled && (
+          <Button size="sm" variant="ghost" className="mr-2 px-2 py-0 h-6 text-xs rounded-full hover:bg-primary-50 hover:text-primary-600">
+            Upgrade
+          </Button>
+        )}
+        <Switch 
+          checked={enabled} 
+          onCheckedChange={onChange}
+          disabled={disabled}
+          className={`${disabled ? "opacity-50" : ""} ${enabled && !disabled ? textColors[color] : ""}`}
+        />
+      </div>
     </div>
   );
 }

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { analyzeText } from "@/lib/natural-language";
 import { analyzeUrl, extractUrls } from "@/lib/link-analyzer";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 
 const textFormSchema = z.object({
   content: z.string().min(1, {
@@ -175,20 +175,31 @@ export default function ScanForm({
               
               <Button 
                 type="submit" 
-                className="w-full bg-primary-600 hover:bg-primary-700"
+                className={`w-full relative overflow-hidden ${isScanning ? 'bg-primary-600' : 'bg-gradient-shield hover:shadow-lg transition-all duration-300'}`}
                 disabled={isScanning}
               >
-                {isScanning ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Scanning...
-                  </>
-                ) : (
-                  <>
-                    <span className="material-icons mr-2">search</span>
-                    Scan Message
-                  </>
+                {!isScanning && (
+                  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHJlY3Qgd2lkdGg9IjIiIGhlaWdodD0iMiIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-20"></div>
                 )}
+                <div className="relative z-10 py-1">
+                  {isScanning ? (
+                    <>
+                      <div className="flex items-center justify-center">
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        <span className="font-medium">Analyzing content...</span>
+                      </div>
+                      {/* Progress bar animation */}
+                      <div className="mt-1 h-1 w-full bg-white/20 rounded-full overflow-hidden">
+                        <div className="h-full bg-white animate-[shimmer_2s_ease-in-out_infinite]" style={{width: '80%'}}></div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <Search className="mr-2 h-5 w-5" />
+                      <span className="font-medium">Scan Message</span>
+                    </div>
+                  )}
+                </div>
               </Button>
             </form>
           </Form>
@@ -217,20 +228,34 @@ export default function ScanForm({
               
               <Button 
                 type="submit" 
-                className="w-full bg-primary-600 hover:bg-primary-700"
+                className={`w-full relative overflow-hidden ${isScanning ? 'bg-primary-600' : 'bg-gradient-shield hover:shadow-lg transition-all duration-300'}`}
                 disabled={isScanning}
               >
-                {isScanning ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Scanning URL...
-                  </>
-                ) : (
-                  <>
-                    <span className="material-icons mr-2">link</span>
-                    Scan URL
-                  </>
+                {!isScanning && (
+                  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHJlY3Qgd2lkdGg9IjIiIGhlaWdodD0iMiIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-20"></div>
                 )}
+                <div className="relative z-10 py-1">
+                  {isScanning ? (
+                    <>
+                      <div className="flex items-center justify-center">
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        <span className="font-medium">Analyzing URL...</span>
+                      </div>
+                      {/* Progress bar animation */}
+                      <div className="mt-1 h-1 w-full bg-white/20 rounded-full overflow-hidden">
+                        <div className="h-full bg-white animate-[shimmer_2s_ease-in-out_infinite]" style={{width: '80%'}}></div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                      </svg>
+                      <span className="font-medium">Scan URL</span>
+                    </div>
+                  )}
+                </div>
               </Button>
             </form>
           </Form>
